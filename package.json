@@ -2,7 +2,7 @@
   "name": "carrerwill",
   "version": "1.0.0",
   "main": "index.js",
-  "type":"commonjs",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js"
@@ -16,6 +16,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.3",
+    "mongoose-sequence": "^6.0.1",
     "nodemon": "^3.1.10"
   }
 }

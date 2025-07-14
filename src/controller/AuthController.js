@@ -23,7 +23,9 @@ exports.login = async (req, res) => {
     }
 
     const token = await generateToken(user);
-    return res.status(200).json({ message: "Login successful", token: token, user });
+    return res
+      .status(200)
+      .json({ message: "Login successful", token: token, user });
   } catch (error) {
     console.error("Error logging in user:", error);
     return res.status(500).json({ error: error.message });
@@ -32,17 +34,17 @@ exports.login = async (req, res) => {
 
 exports.signUp = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
     const user = await User.findOne({ email });
-    console.log("We are here");
 
     if (user) return res.status(409).json({ message: "User already exists" });
 
-    const USER = User.create({
-      name,
+    const USER = await User.create({
+      username: name,
       email,
       password,
       role,
+      phone,
     });
     res.status(200).json({ message: "User created successfully" });
   } catch (error) {

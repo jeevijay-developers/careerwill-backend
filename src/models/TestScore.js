@@ -34,5 +34,6 @@ const testScoreSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+testScoreSchema.index({ student: 1, batch: 1, date: -1 });
 
 module.exports = mongoose.model("TestScore", testScoreSchema);

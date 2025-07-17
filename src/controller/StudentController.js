@@ -114,3 +114,22 @@ exports.getStudentById = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.findParentByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const parent = await User.findOne({ email, role: "PARENT" });
+    if (!parent) {
+      return res.status(404).json({ message: "Parent not found" });
+    }
+
+    res.status(200).json(parent);
+  } catch (err) {
+    console.error("Error finding parent:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

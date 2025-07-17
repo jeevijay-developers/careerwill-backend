@@ -4,6 +4,7 @@ const {
   uploadImage,
   getAllStudents,
   getStudentById,
+  findParentByEmail,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -14,5 +15,7 @@ router.post("/upload-image", upload, uploadImage);
 router.get("/get-all-sutdents", getAllStudents);
 
 router.get("/get-student-by-id/:id", getStudentById);
+
+router.get("/find-parent-by-email/:email", findParentByEmail);
 
 module.exports = router;

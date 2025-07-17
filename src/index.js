@@ -1,13 +1,16 @@
 const express = require("express");
 const connectDB = require("./config/mongoDB");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv").config();
 const authRoute = require("./router/AuthRouter");
 const kitRoute = require("./router/kitRoutes");
+const studentRoute = require("./router/studentRoutes");
+const batchRoute = require("./router/batchRoutes");
 const cors = require("cors");
-dotenv.config();
+
 const ORIGINS = [
-  process.env.TEST_ENV,
-  process.env.DEV_ENV,
+  "http://localhost:3000",
+  "https://careerwill-frontend.vercel.app",
+  "https://careerwill-frontend-git-main-cw-ashishverma.vercel.app",
 ];
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +29,8 @@ app.use(cors(CORS));
 connectDB();
 app.use(express.json());
 app.use("/api/kit", kitRoute);
+app.use("/api/student", studentRoute);
+app.use("/api/batch", batchRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello");

@@ -4,8 +4,7 @@ const Kit = require("../models/Kit");
 exports.createKit = async (req, res) => {
   try {
     const { name, description } = req.body;
-    // console.log("Creating kit with data:", req.body);
-    
+
     if (!name || !description) {
       return res
         .status(400)
@@ -13,9 +12,7 @@ exports.createKit = async (req, res) => {
     }
 
     const newKit = await Kit.create({ name, description });
-    // console.log("New kit created:", newKit);
-    
-    return res.status(201).json(newKit);
+    res.status(201).json(newKit);
   } catch (err) {
     res.status(500).json({ message: "Error creating kit", error: err.message });
   }

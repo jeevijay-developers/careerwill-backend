@@ -3,15 +3,22 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const studentSchema = new mongoose.Schema(
   {
-    studentId: Number, // This will be auto-incremented
     name: { type: String, required: true },
-    rollNo: { type: String, required: true, unique: true },
-    class: { type: String, required: true },
+    rollNo: Number,
+    image: {
+      public_id: { type: String, default: "" },
+      url: { type: String, default: "" },
+    },
+    address: { type: String, default: "" },
+    batch: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Batch",
+      required: true,
+    },
     phone: { type: String, required: true },
     kit: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Kit",
+        type: String,
       },
     ],
     parent: {
@@ -25,7 +32,7 @@ const studentSchema = new mongoose.Schema(
 
 // Apply auto-increment plugin
 studentSchema.plugin(AutoIncrement, {
-  inc_field: "studentId",
+  inc_field: "rollNo",
   start_seq: 1,
 });
 

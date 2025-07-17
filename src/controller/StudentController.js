@@ -1,0 +1,95 @@
+const mongoose = require("mongoose");
+const User = require("../models/User");
+const Student = require("../models/Student");
+const { uploadToCloudinary } = require("../middleware/cloudinary");
+
+exports.createStudent = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { name, batch, phone, image, parent, kit, address } = req.body;
+
+    // Validate required fields
+    if (!name || !batch || !phone || !parent) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (kit && !Array.isArray(kit)) {
+      return res.status(400).json({ message: "Kit must be an array" });
+    }
+
+    if (!image.url || !image.url === "") {
+      return res.status(400).json({ message: "Image URL is required" });
+    }
+    let parentId;
+    let parentDoc = await User.findOne({
+      email: parent.email,
+      role: "PARENT",
+    }).session(session);
+
+    // If parent does not exist, create one
+    if (!parentDoc) {
+      const newParent = new User({
+        username: parent.username,
+        password: parent.password,
+        email: parent.email,
+        phone: parent.phone,
+        role: "PARENT",
+        students: [],
+      });
+      parentDoc = await newParent.save({ session });
+    }
+
+    parentId = parentDoc._id;
+
+    // Upload image if exists
+    let imageObject = image;
+    // Create new student
+    const newStudent = new Student({
+      name,
+      batch,
+      phone,
+      kit,
+      parent: parentId,
+      address,
+      image: imageObject,
+    });
+
+    await newStudent.save({ session });
+
+    // Push student to parent's student list
+    parentDoc.students = parentDoc.students || [];
+    parentDoc.students.push(newStudent._id);
+    await parentDoc.save({ session });
+
+    await session.commitTransaction();
+    res
+      .status(201)
+      .json({ message: "Student created successfully", student: newStudent });
+  } catch (err) {
+    await session.abortTransaction();
+    console.error("Error creating student:", err);
+    res.status(500).json({ message: "Internal server error" });
+  } finally {
+    session.endSession();
+  }
+};
+
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer);
+
+    res.status(200).json({
+      message: "Image uploaded successfully",
+      image: result,
+    });
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

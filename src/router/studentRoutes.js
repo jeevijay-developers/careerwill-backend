@@ -2,11 +2,17 @@ const router = require("express").Router();
 const {
   createStudent,
   uploadImage,
+  getAllStudents,
+  getStudentById,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
 router.post("/create-student", createStudent);
 
 router.post("/upload-image", upload, uploadImage);
+
+router.get("/get-all-sutdents", getAllStudents);
+
+router.get("/get-student-by-id/:id", getStudentById);
 
 module.exports = router;

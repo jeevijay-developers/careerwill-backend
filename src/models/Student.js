@@ -15,6 +15,11 @@ const studentSchema = new mongoose.Schema(
       ref: "Batch",
       required: true,
     },
+    fee: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Fee",
+      default: null,
+    },
     phone: { type: String, required: true },
     kit: [
       {

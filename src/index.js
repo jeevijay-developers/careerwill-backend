@@ -5,6 +5,7 @@ const authRoute = require("./router/AuthRouter");
 const kitRoute = require("./router/kitRoutes");
 const studentRoute = require("./router/studentRoutes");
 const batchRoute = require("./router/batchRoutes");
+const feeRoute = require("./router/feeRoutes");
 const cors = require("cors");
 
 const ORIGINS = [
@@ -31,6 +32,7 @@ app.use(express.json());
 app.use("/api/kit", kitRoute);
 app.use("/api/student", studentRoute);
 app.use("/api/batch", batchRoute);
+app.use("/api/fee", feeRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello");

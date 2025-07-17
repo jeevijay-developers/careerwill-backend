@@ -20,11 +20,6 @@ const feeSchema = new mongoose.Schema(
       {
         date: { type: Date, required: true },
         amount: { type: Number, required: true },
-        paymentMethod: {
-          type: String,
-          enum: ["CASH", "CARD", "ONLINE"],
-          required: true,
-        },
       },
     ],
   },

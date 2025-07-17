@@ -96,8 +96,24 @@ exports.uploadImage = async (req, res) => {
 
 exports.getAllStudents = async (req, res) => {
   try {
-    const students = await Student.find().populate("parent");
-    res.status(200).json(students);
+    const page = parseInt(req.query.page) || 1; // Current page number
+    const limit = parseInt(req.query.limit) || 10; // Number of items per page
+    const skip = (page - 1) * limit;
+
+    const totalStudents = await Student.countDocuments();
+    const students = await Student.find()
+      .populate("parent")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Optional: sort by latest created
+
+    res.status(200).json({
+      total: totalStudents,
+      page,
+      limit,
+      totalPages: Math.ceil(totalStudents / limit),
+      students,
+    });
   } catch (err) {
     console.error("Error fetching students:", err);
     return res.status(500).json({ message: "Internal server error" });

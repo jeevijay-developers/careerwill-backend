@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 
 const testScoreSchema = new mongoose.Schema(
   {
+    rollNumber: {
+      type: Number,
+      required: true,
+    },
     student: {
       type: String,
       required: true,
@@ -16,9 +20,10 @@ const testScoreSchema = new mongoose.Schema(
       trim: true,
     },
     batch: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Batch",
+      type: String,
       required: true,
+      lowercase: true,
+      trim: true,
     },
 
     subjects: [
@@ -30,7 +35,7 @@ const testScoreSchema = new mongoose.Schema(
     percentile: { type: Number, required: true },
     total: { type: Number, required: true },
     rank: { type: Number, required: true },
-    date: { type: Date, required: true },
+    date: { type: Date, required: true, default: Date.now() },
   },
   { timestamps: true }
 );

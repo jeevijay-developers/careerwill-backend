@@ -5,6 +5,7 @@ const {
   getAllStudents,
   getStudentById,
   findParentByEmail,
+  getStudentTestScores,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -17,5 +18,7 @@ router.get("/get-all-sutdents", getAllStudents);
 router.get("/get-student-by-id/:id", getStudentById);
 
 router.get("/find-parent-by-email/:email", findParentByEmail);
+
+router.get("/get-student-test-scores/:rollNumber", getStudentTestScores);
 
 module.exports = router;

@@ -6,6 +6,7 @@ const kitRoute = require("./router/kitRoutes");
 const studentRoute = require("./router/studentRoutes");
 const batchRoute = require("./router/batchRoutes");
 const feeRoute = require("./router/feeRoutes");
+const bulkUploadRoutes = require("./router/bulkUploadRoutes");
 const cors = require("cors");
 
 const ORIGINS = [
@@ -33,6 +34,7 @@ app.use("/api/kit", kitRoute);
 app.use("/api/student", studentRoute);
 app.use("/api/batch", batchRoute);
 app.use("/api/fee", feeRoute);
+app.use("/api/bulk", bulkUploadRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello");

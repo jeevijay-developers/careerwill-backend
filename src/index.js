@@ -10,7 +10,8 @@ const bulkUploadRoutes = require("./router/bulkUploadRoutes");
 const cors = require("cors");
 
 const ORIGINS = [
-  "http://localhost:3000",
+  process.env.DEV_ENV,
+  process.env.TEST_ENV,
   "https://careerwill-frontend.vercel.app",
   "https://careerwill-frontend-git-main-cw-ashishverma.vercel.app",
 ];

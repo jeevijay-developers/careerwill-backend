@@ -210,11 +210,7 @@ exports.getStudentWithIncompleteKit = async (req, res) => {
       // If student is missing at least one kit
       return allKitIds.some(kitId => !studentKitIds.includes(kitId));
     });
-
-    if (!incompleteStudents || incompleteStudents.length === 0) {
-      return res.status(404).json({ message: "No students found with incomplete kit" });
-    }
-
+    
     res.status(200).json(incompleteStudents);
   } catch (err) {
     console.error("Error fetching students with incomplete kit:", err);

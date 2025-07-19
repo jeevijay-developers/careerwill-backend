@@ -2,10 +2,10 @@ const Fee = require("../models/Fee");
 const Student = require("../models/Student");
 
 exports.createFeeSubmission = async (req, res) => {
-  const { studentId, amount, paidAmount, dueDate } = req.body;
+  const { studentRollNo, amount, paidAmount, dueDate } = req.body;
 
   try {
-    const student = await Student.findById(studentId).populate("fee");
+    const student = await Student.findOne({ rollNo: studentRollNo }).populate("fee");
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -14,9 +14,9 @@ exports.createFeeSubmission = async (req, res) => {
     let feeDoc;
 
     if (!student.fee) {
-      // Create new fee document
+      // Create new fee document with studentName and studentRollNo
       feeDoc = new Fee({
-        student: studentId,
+        studentRollNo: student.rollNo,
         amount,
         paidAmount,
         dueDate,
@@ -47,6 +47,40 @@ exports.createFeeSubmission = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating fee submission:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAllFees = async (req, res) => {
+  try {
+    const fees = await Fee.find();
+    res.status(200).json(fees);
+  } catch (err) {
+    console.error("Error fetching all fees:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.updateFeeOfStudent = async (req, res) => {
+  const { paidAmount, date } = req.body;
+  const feeId = req.params.id;
+
+  try {
+    const fee = await Fee.findById(feeId);
+    if (!fee) {
+      return res.status(404).json({ message: "Fee record not found" });
+    }
+
+    // Add new submission
+    fee.paidAmount += paidAmount;
+    fee.submissions.push({ date: date ? new Date(date) : new Date(), amount: paidAmount });
+    // Recalculate status
+    fee.status = fee.amount === fee.paidAmount ? "PAID" : "PARTIAL";
+
+    await fee.save();
+    res.status(200).json({ message: "Fee record updated successfully", fee });
+  } catch (err) {
+    console.error("Error updating fee record:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -4,6 +4,7 @@ const Student = require("../models/Student");
 const { uploadToCloudinary } = require("../middleware/cloudinary");
 const TestScore = require("../models/TestScore");
 const Kit = require("../models/Kit");
+const Fee = require("../models/Fee");
 
 
 exports.createStudent = async (req, res) => {
@@ -210,7 +211,7 @@ exports.getStudentWithIncompleteKit = async (req, res) => {
       // If student is missing at least one kit
       return allKitIds.some(kitId => !studentKitIds.includes(kitId));
     });
-    
+
     res.status(200).json(incompleteStudents);
   } catch (err) {
     console.error("Error fetching students with incomplete kit:", err);
@@ -254,6 +255,16 @@ exports.updateStudentKit = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating student kit:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAllStudentFees = async (req, res) =>{
+  try {
+    const fees = await Fee.find();
+    res.status(200).json(fees);
+  } catch (err) {
+    console.error("Error fetching all student fees:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

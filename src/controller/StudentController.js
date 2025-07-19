@@ -19,6 +19,14 @@ exports.createStudent = async (req, res) => {
     if (kit && !Array.isArray(kit)) {
       return res.status(400).json({ message: "Kit must be an array" });
     }
+    // Validate kit ObjectIds
+    if (kit && Array.isArray(kit)) {
+      for (const kitId of kit) {
+        if (!mongoose.Types.ObjectId.isValid(kitId)) {
+          return res.status(400).json({ message: `Invalid kit id: ${kitId}` });
+        }
+      }
+    }
 
     if (!image.url || !image.url === "") {
       return res.status(400).json({ message: "Image URL is required" });
@@ -51,7 +59,7 @@ exports.createStudent = async (req, res) => {
       name,
       batch,
       phone,
-      kit,
+      kit: kit || [],
       parent: parentId,
       address,
       image: imageObject,
@@ -65,6 +73,8 @@ exports.createStudent = async (req, res) => {
     await parentDoc.save({ session });
 
     await session.commitTransaction();
+    // Populate kit for response
+    await newStudent.populate('kit');
     res
       .status(201)
       .json({ message: "Student created successfully", student: newStudent });
@@ -104,6 +114,7 @@ exports.getAllStudents = async (req, res) => {
     const totalStudents = await Student.countDocuments();
     const students = await Student.find()
       .populate("parent")
+      .populate("kit")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }); // Optional: sort by latest created
@@ -123,7 +134,7 @@ exports.getAllStudents = async (req, res) => {
 
 exports.getStudentById = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id).populate("parent");
+    const student = await Student.findById(req.params.id).populate("parent").populate("kit");
     if (!student) return res.status(404).json({ message: "Student not found" });
     res.status(200).json(student);
   } catch (err) {
@@ -185,7 +196,7 @@ exports.getStudentWithIncompleteKit = async (req, res) => {
     const students = await Student.find({
       batch: batchId,
       kit: { $exists: true, $not: { $size: 0 } },
-    }).populate("parent");
+    }).populate("parent").populate("kit");
 
     if (!students || students.length === 0) {
       return res.status(404).json({ message: "No students found with incomplete kit" });
@@ -206,6 +217,12 @@ exports.updateStudentKit = async (req, res) => {
     if (!kit || !Array.isArray(kit)) {
       return res.status(400).json({ message: "Kit must be an array" });
     }
+    // Validate kit ObjectIds
+    for (const kitId of kit) {
+      if (!mongoose.Types.ObjectId.isValid(kitId)) {
+        return res.status(400).json({ message: `Invalid kit id: ${kitId}` });
+      }
+    }
 
     const student = await Student.findById(studentId).populate("parent");
 
@@ -214,12 +231,13 @@ exports.updateStudentKit = async (req, res) => {
     }
 
     // Merge kits (avoid duplicates if needed)
-    student.kit = [...(student.kit || []), ...kit];
+    student.kit = [...(student.kit || []), ...kit.map(id => id.toString())];
 
-    // Optional: remove duplicates
-    student.kit = [...new Set(student.kit)];
+    // Remove duplicates
+    student.kit = [...new Set(student.kit.map(id => id.toString()))];
 
     await student.save();
+    await student.populate("kit");
 
     res.status(200).json({
       message: "Student kit updated successfully",

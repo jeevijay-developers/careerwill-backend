@@ -23,7 +23,8 @@ const studentSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     kit: [
       {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Kit",
       },
     ],
     parent: {

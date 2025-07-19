@@ -204,10 +204,6 @@ exports.getStudentWithIncompleteKit = async (req, res) => {
       batch: batchId
     }).populate("parent").populate("kit");
 
-    if (!students || students.length === 0) {
-      return res.status(404).json({ message: "No students found with incomplete kit" });
-    }
-
     // Filter students who do not have all kits
     const incompleteStudents = students.filter(student => {
       const studentKitIds = (student.kit || []).map(k => (k._id ? k._id.toString() : k.toString()));

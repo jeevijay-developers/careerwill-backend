@@ -6,10 +6,12 @@ const kitRoute = require("./router/kitRoutes");
 const studentRoute = require("./router/studentRoutes");
 const batchRoute = require("./router/batchRoutes");
 const feeRoute = require("./router/feeRoutes");
+const bulkUploadRoutes = require("./router/bulkUploadRoutes");
 const cors = require("cors");
 
 const ORIGINS = [
-  "http://localhost:3000",
+  process.env.DEV_ENV,
+  process.env.TEST_ENV,
   "https://careerwill-frontend.vercel.app",
   "https://careerwill-frontend-git-main-cw-ashishverma.vercel.app",
 ];
@@ -33,6 +35,7 @@ app.use("/api/kit", kitRoute);
 app.use("/api/student", studentRoute);
 app.use("/api/batch", batchRoute);
 app.use("/api/fee", feeRoute);
+app.use("/api/bulk", bulkUploadRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello");

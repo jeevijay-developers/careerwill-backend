@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const { uploadToCloudinary } = require("../middleware/cloudinary");
+const TestScore = require("../models/TestScore");
 
 exports.createStudent = async (req, res) => {
   const session = await mongoose.startSession();
@@ -146,6 +147,30 @@ exports.findParentByEmail = async (req, res) => {
     res.status(200).json(parent);
   } catch (err) {
     console.error("Error finding parent:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getStudentTestScores = async (req, res) => {
+  try {
+    const rollNumber = req.params.rollNumber;
+    if (!rollNumber) {
+      return res.status(400).json({ message: "Student ID is required" });
+    }
+
+    const student = await Student.findOne({ rollNo: rollNumber });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const results = await TestScore.find({ rollNumber });
+    if (!results) {
+      return res.status(404).json({ message: "Results not found" });
+    }
+
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Error fetching student test scores:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

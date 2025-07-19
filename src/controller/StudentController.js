@@ -3,6 +3,8 @@ const User = require("../models/User");
 const Student = require("../models/Student");
 const { uploadToCloudinary } = require("../middleware/cloudinary");
 const TestScore = require("../models/TestScore");
+const Kit = require("../models/Kit");
+
 
 exports.createStudent = async (req, res) => {
   const session = await mongoose.startSession();
@@ -193,16 +195,27 @@ exports.getStudentWithIncompleteKit = async (req, res) => {
       return res.status(400).json({ message: "Batch ID is required" });
     }
 
+    // Fetch all kits
+    const allKits = await Kit.find({}, "_id");
+    const allKitIds = allKits.map(kit => kit._id.toString());
+
+    // Fetch all students in the batch
     const students = await Student.find({
-      batch: batchId,
-      kit: { $exists: true, $not: { $size: 0 } },
+      batch: batchId
     }).populate("parent").populate("kit");
 
-    if (!students || students.length === 0) {
+    // Filter students who do not have all kits
+    const incompleteStudents = students.filter(student => {
+      const studentKitIds = (student.kit || []).map(k => (k._id ? k._id.toString() : k.toString()));
+      // If student is missing at least one kit
+      return allKitIds.some(kitId => !studentKitIds.includes(kitId));
+    });
+
+    if (!incompleteStudents || incompleteStudents.length === 0) {
       return res.status(404).json({ message: "No students found with incomplete kit" });
     }
 
-    res.status(200).json(students);
+    res.status(200).json(incompleteStudents);
   } catch (err) {
     console.error("Error fetching students with incomplete kit:", err);
     return res.status(500).json({ message: "Internal server error" });

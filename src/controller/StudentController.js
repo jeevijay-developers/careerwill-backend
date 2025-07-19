@@ -174,3 +174,59 @@ exports.getStudentTestScores = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.getStudentWithIncompleteKit = async (req, res) => {
+  try {
+    const batchId = req.params.batchId;
+    if (!batchId) {
+      return res.status(400).json({ message: "Batch ID is required" });
+    }
+
+    const students = await Student.find({
+      batch: batchId,
+      kit: { $exists: true, $not: { $size: 0 } },
+    }).populate("parent");
+
+    if (!students || students.length === 0) {
+      return res.status(404).json({ message: "No students found with incomplete kit" });
+    }
+
+    res.status(200).json(students);
+  } catch (err) {
+    console.error("Error fetching students with incomplete kit:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.updateStudentKit = async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const { kit } = req.body;
+
+    if (!kit || !Array.isArray(kit)) {
+      return res.status(400).json({ message: "Kit must be an array" });
+    }
+
+    const student = await Student.findById(studentId).populate("parent");
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Merge kits (avoid duplicates if needed)
+    student.kit = [...(student.kit || []), ...kit];
+
+    // Optional: remove duplicates
+    student.kit = [...new Set(student.kit)];
+
+    await student.save();
+
+    res.status(200).json({
+      message: "Student kit updated successfully",
+      student,
+    });
+  } catch (err) {
+    console.error("Error updating student kit:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -6,6 +6,8 @@ const {
   getStudentById,
   findParentByEmail,
   getStudentTestScores,
+  getStudentWithIncompleteKit,
+  updateStudentKit
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -14,8 +16,12 @@ router.post("/create-student", createStudent);
 router.post("/upload-image", upload, uploadImage);
 
 router.get("/get-all-students", getAllStudents);
-router.get("/get-student-by-batch/:batchId", getStudentById);
+
+router.get("/incomplete-kit/:batchId", getStudentWithIncompleteKit);
+
 router.get("/get-student-by-id/:id", getStudentById);
+
+router.put("/update-student-kit/:id", updateStudentKit);
 
 router.get("/find-parent-by-email/:email", findParentByEmail);
 

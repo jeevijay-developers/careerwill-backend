@@ -1,4 +1,5 @@
 const Kit = require("../models/Kit");
+const Student = require("../models/Student");
 
 // Create new kit
 exports.createKit = async (req, res) => {
@@ -62,6 +63,13 @@ exports.deleteKit = async (req, res) => {
   try {
     const deletedKit = await Kit.findByIdAndDelete(req.params.id);
     if (!deletedKit) return res.status(404).json({ message: "Kit not found" });
+
+    // Remove kit reference from all students
+    await Student.updateMany(
+      { kit: req.params.id },
+      { $pull: { kit: req.params.id } }
+    );
+
     res.status(200).json({ message: "Kit deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: "Error deleting kit", error: err.message });

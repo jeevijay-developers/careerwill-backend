@@ -54,7 +54,15 @@ exports.createFeeSubmission = async (req, res) => {
 exports.getAllFees = async (req, res) => {
   try {
     const fees = await Fee.find();
-    res.status(200).json(fees);
+    // For each fee, fetch the student name by rollNo
+    const feesWithNames = await Promise.all(fees.map(async (fee) => {
+      const student = await Student.findOne({ rollNo: fee.studentRollNo });
+      return {
+        ...fee.toObject(),
+        studentName: student ? student.name : "Unknown"
+      };
+    }));
+    res.status(200).json(feesWithNames);
   } catch (err) {
     console.error("Error fetching all fees:", err);
     res.status(500).json({ message: "Internal server error" });

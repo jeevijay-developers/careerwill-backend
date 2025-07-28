@@ -18,15 +18,8 @@ const ORIGINS = [
 const app = express();
 const PORT = process.env.PORT || 5000;
 const CORS = {
-  origin: (origin, callback) => {
-    if (ORIGINS.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
 };
 app.use(cors(CORS));
 connectDB();
@@ -36,6 +29,7 @@ app.use("/api/student", studentRoute);
 app.use("/api/batch", batchRoute);
 app.use("/api/fee", feeRoute);
 app.use("/api/bulk", bulkUploadRoutes);
+app.use("/api/auth", authRoute);
 app.post("/", async (req, res) => {
   const { request_code } = req.headers;
 
@@ -63,7 +57,5 @@ app.post("/", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("Hello");
 });
-
-app.use("/api/auth", authRoute);
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));

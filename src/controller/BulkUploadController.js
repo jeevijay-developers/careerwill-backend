@@ -43,7 +43,7 @@ exports.uploadTestScores = async (req, res) => {
       const subjects = getAllSubjects();
       for (const prop in row) {
         if (subjects.includes(`${prop}`)) {
-          console.log(prop);
+          // console.log(prop);
           const subjectName = prop.toLowerCase().trim();
           const marks = row[prop];
           if (marks !== undefined && marks !== null) {

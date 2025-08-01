@@ -2,6 +2,8 @@ const xlsx = require("xlsx");
 const mongoose = require("mongoose");
 const { getAllSubjects } = require("../helper/Subject");
 const TestScore = require("../models/TestScore");
+const Fee = require("../models/Fee");
+const Student = require("../models/Student");
 exports.uploadTestScores = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
@@ -80,6 +82,135 @@ exports.uploadTestScores = async (req, res) => {
       message: "An error occurred during file processing.",
       error: error.message,
     });
+  } finally {
+    session.endSession();
+  }
+};
+
+exports.bulkUploadStudents = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const workbook = xlsx.read(req.file.buffer, {
+      type: "buffer",
+      cellDates: true,
+    });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const insertedStudents = [];
+
+    for (const row of sheetData) {
+      // console.log(row[`student mobile no`]);
+      if (
+        !row[`student mobile no`] ||
+        !row[`Parents Contact No.`] ||
+        !row[`Emergency Local Contact No`]
+      ) {
+        console.log(row[`student mobile no`]);
+        await session.abortTransaction();
+        return res.status(400).json({
+          error: "Mobile numbers are required for both student and parent.",
+        });
+      }
+
+      if (
+        !row[`FINAL FEE`] ||
+        !row[`Expected Date of Receipt of Pending Fees`] ||
+        !row[`Mode of Payment`]
+      ) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          error: "Fee details are required.",
+        });
+      }
+      const rollNoUsed = await Student.findOne({
+        rollNo: row[`ROLL NO.`],
+      });
+      if (rollNoUsed) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          error: "Roll number already exists.",
+        });
+      }
+
+      const newStudent = new Student({
+        rollNo: row[`ROLL NO.`],
+        name: row["Student Name"] || "N/A",
+        class: row[`Class`],
+        previousSchoolName: row[`Previous School Name`] || "",
+        medium: row[`Medium`] || "",
+        DOB: row[`DOB`] || "",
+        gender: row[`Gender`],
+        category: row[`Category`] || "",
+        state: row[`State`] || "",
+        city: row[`City`] || "",
+        pinCode: row[`Pincode`] || "",
+        permanentAddress: row[`Permanent Address`] || "",
+        mobileNumber: row[`student mobile no`],
+        tShirtSize: row[`T-SHIRT SIZE`] || "",
+        howDidYouHearAboutUs: row[`How did you know about career will`] || "",
+        programmeName: row[`Programme Name`] || "",
+        emergencyContact: row[`Emergency Local Contact No`],
+        email: row[`Email ID`] || "",
+        phone: row[`student mobile no`],
+        parent: {
+          occupation: row[`Parents Occupation`] || "",
+          fatherName: row[`Father's Name`] || "",
+          motherName: row[`Mother's Name`] || "",
+          parentContact: row[`Parents Contact No.`],
+          email: row[`Parents Email`] || "", // assuming there's an email column
+        },
+        batch: row[`BATCH NAME`],
+      });
+
+      const savedStudent = await newStudent.save({ session });
+
+      const fee = new Fee({
+        studentRollNo: savedStudent.rollNo,
+        totalFees: row[`Total Fees`],
+        discount: row[`Discount`] || 0,
+        finalFees: row[`FINAL FEE`],
+        approvedBy: row[`Approved By`] || "",
+        amount: row[`Received Amount`] || 0,
+        dueDate: new Date(row[`Expected Date of Receipt of Pending Fees`]),
+        status:
+          Number(row[`FINAL FEE`]) === Number(row[`Received Amount`])
+            ? "PAID"
+            : "PARTIAL",
+        submissions: [
+          {
+            amount: row[`Received Amount`],
+            mode: row[`Mode of Payment`] || "N/A",
+            dateOfReceipt: new Date(row[`Date of Receipt`]),
+            receiptNumber: row[`Receipt No.`] || "",
+            UTR: row[`UTR NO.`] || "",
+            date: new Date(row[`Date of Receipt`]), // required in schema
+          },
+        ],
+      });
+
+      const savedFee = await fee.save({ session });
+
+      savedStudent.fee = savedFee._id;
+      await savedStudent.save({ session });
+
+      insertedStudents.push(savedStudent);
+    }
+
+    await session.commitTransaction();
+    res.status(201).json({
+      message: "Bulk upload successful",
+      insertedCount: insertedStudents.length,
+    });
+  } catch (err) {
+    console.error("Error in bulk upload:", err);
+    await session.abortTransaction();
+    res.status(500).json({ error: "Bulk upload failed", details: err.message });
   } finally {
     session.endSession();
   }

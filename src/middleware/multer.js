@@ -13,5 +13,6 @@ const upload = multer({
 module.exports = {
   upload: upload.single("image"), // Expecting a single file with the field name 'image'
   scoreUpload: upload.single("scoresFile"), // Expecting a single file with the field name 'file'
+  studentUpload: upload.single("studentFile"), // Expecting a single file with the field name 'file'
   uploadMultiple: upload.array("images", 10), // Expecting multiple files with the
 };

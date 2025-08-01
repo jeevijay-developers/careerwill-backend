@@ -15,6 +15,7 @@ const feeSchema = new mongoose.Schema(
     amount: { type: Number, required: true },
     paidAmount: { type: Number, default: 0 },
     dueDate: { type: Date, required: true },
+    pendingAmount: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ["PAID", "UNPAID", "PARTIAL"],
@@ -22,7 +23,7 @@ const feeSchema = new mongoose.Schema(
     },
     submissions: [
       {
-        date: { type: Date, required: true },
+        // date: { type: Date, required: true },
         amount: { type: Number, required: true },
         mode: { type: String, required: true },
         dateOfReceipt: { type: Date, required: true },

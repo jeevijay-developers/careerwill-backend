@@ -23,4 +23,6 @@ router.put("/update-test-scores/:id", testScoreController.updateTestScore);
 // DELETE /api/test-scores/:id
 router.delete("/delete-test-scores/:id", testScoreController.deleteTestScore);
 
+router.get("/search-test-scores", testScoreController.searchTestScore);
+
 module.exports = router;

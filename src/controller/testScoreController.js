@@ -1,3 +1,4 @@
+const Student = require("../models/Student");
 const TestScore = require("../models/TestScore");
 
 // Create new test score
@@ -80,3 +81,38 @@ exports.deleteTestScore = async (req, res) => {
       .json({ message: "Error deleting score", error: err.message });
   }
 };
+
+exports.searchTestScore = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) {
+            return res.status(400).json({ message: "Search query is required" });
+        }
+
+        const regex = new RegExp(query, 'i');
+        const orConditions = [
+            { student: regex },
+            { batch: regex }
+        ];
+        // Only add rollNumber if query is a valid number
+        if (!isNaN(query)) {
+            orConditions.push({ rollNumber: Number(query) });
+        }
+        // For date, try to match if query is a valid date string
+        const dateQuery = new Date(query);
+        if (!isNaN(dateQuery.getTime())) {
+            // Search for exact date (ignoring time)
+            const start = new Date(dateQuery.setHours(0,0,0,0));
+            const end = new Date(dateQuery.setHours(23,59,59,999));
+            orConditions.push({ date: { $gte: start, $lte: end } });
+        }
+        const scores = await TestScore.find({ $or: orConditions });
+        if (scores.length === 0) {
+            return res.status(404).json({ message: "No test scores found" });
+        }
+        res.status(200).json(scores);
+    } catch (err) {
+        console.error("Error searching test scores:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}

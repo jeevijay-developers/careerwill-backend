@@ -7,7 +7,8 @@ const {
   findParentByEmail,
   getStudentTestScores,
   getStudentWithIncompleteKit,
-  updateStudentKit
+  updateStudentKit,
+  searchStudents
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -26,5 +27,7 @@ router.put("/update-student-kit/:id", updateStudentKit);
 router.get("/find-parent-by-email/:email", findParentByEmail);
 
 router.get("/get-student-test-scores/:rollNumber", getStudentTestScores);
+
+router.get("/search-students", searchStudents);
 
 module.exports = router;

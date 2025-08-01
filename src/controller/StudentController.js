@@ -5,6 +5,7 @@ const { uploadToCloudinary } = require("../middleware/cloudinary");
 const TestScore = require("../models/TestScore");
 const Kit = require("../models/Kit");
 const Fee = require("../models/Fee");
+const Batch = require("../models/Batch");
 
 
 exports.createStudent = async (req, res) => {
@@ -268,3 +269,36 @@ exports.getAllStudentFees = async (req, res) =>{
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.searchStudents = async (req, res)=> {
+  const { query } = req.query;
+  if (!query) {
+    return res.status(400).json({ message: "Query parameter is required" });
+  }
+
+  try {
+    const regex = new RegExp(query, "i");
+    let batchIds = [];
+    if (Batch) {
+      const batches = await Batch.find({ name: regex }, '_id');
+      batchIds = batches.map(b => b._id);
+    }
+    const orConditions = [
+      { name: regex }
+    ];
+    // Only add rollNo if query is a valid number
+    if (!isNaN(query)) {
+      orConditions.push({ rollNo: Number(query) });
+    }
+    if (batchIds.length > 0) {
+      orConditions.push({ batch: { $in: batchIds } });
+    }
+    const students = await Student.find({ $or: orConditions })
+      .populate("parent")
+      .populate("kit");
+    res.status(200).json(students);
+  } catch (err) {
+    console.error("Error searching students:", err);
+    return res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+}

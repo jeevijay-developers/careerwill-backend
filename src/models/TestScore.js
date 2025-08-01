@@ -29,7 +29,7 @@ const testScoreSchema = new mongoose.Schema(
     subjects: [
       {
         name: { type: String, required: true, lowercase: true, trim: true },
-        marks: { type: Number, required: true, min: 0 },
+        marks: { type: Number, required: true },
       },
     ],
     percentile: { type: Number, required: true },

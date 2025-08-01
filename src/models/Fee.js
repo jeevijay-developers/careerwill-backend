@@ -7,6 +7,11 @@ const feeSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    totalFees: { type: Number, required: true },
+    discount: { type: Number, default: 0 },
+    finalFees: { type: Number, required: true },
+    approvedBy: { type: String, default: "" },
+
     amount: { type: Number, required: true },
     paidAmount: { type: Number, default: 0 },
     dueDate: { type: Date, required: true },
@@ -19,6 +24,10 @@ const feeSchema = new mongoose.Schema(
       {
         date: { type: Date, required: true },
         amount: { type: Number, required: true },
+        mode: { type: String, required: true },
+        dateOfReceipt: { type: Date, required: true },
+        receiptNumber: { type: String, required: true },
+        UTR: { type: String, default: "" },
       },
     ],
   },

@@ -5,11 +5,36 @@ const studentSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     rollNo: Number,
+    class: { type: String, required: true },
+    previousSchoolName: { type: String, default: "" },
+    medium: { type: String, default: "" },
+    DOB: { type: Date, required: true },
+    gender: { type: String, required: true },
+    category: { type: String, default: "" },
+    state: { type: String, default: "" },
+    city: { type: String, default: "" },
+    pinCode: { type: String, default: "" },
+    permanentAddress: { type: String, default: "" },
+    mobileNumber: { type: String, required: true },
+    tShirtSize: { type: String, default: "" },
+    howDidYouHearAboutUs: { type: String, default: "" },
+    programmeName: { type: String, default: "" },
+    parentContact: { type: String, required: true },
+    emergencyContact: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+
+    parent: {
+      occupation: { type: String, default: "" },
+      fatherName: { type: String, default: "" },
+      motherName: { type: String, default: "" },
+      parentContact: { type: String, required: true },
+      email: { type: String, required: true, unique: true },
+    },
+
     image: {
       public_id: { type: String, default: "" },
       url: { type: String, default: "" },
     },
-    address: { type: String, default: "" },
     batch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Batch",
@@ -27,11 +52,6 @@ const studentSchema = new mongoose.Schema(
         ref: "Kit",
       },
     ],
-    parent: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    }, // role: PARENT
   },
   { timestamps: true }
 );

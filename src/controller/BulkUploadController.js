@@ -106,11 +106,7 @@ exports.bulkUploadStudents = async (req, res) => {
 
     for (const row of sheetData) {
       // console.log(row[`student mobile no`]);
-      if (
-        !row[`student mobile no`] ||
-        !row[`Parents Contact No.`] ||
-        !row[`Emergency Local Contact No`]
-      ) {
+      if (!row[`student mobile no`] || !row[`Parents Contact No.`]) {
         console.log(row[`student mobile no`]);
         await session.abortTransaction();
         return res.status(400).json({
@@ -118,11 +114,7 @@ exports.bulkUploadStudents = async (req, res) => {
         });
       }
 
-      if (
-        !row[`FINAL FEE`] ||
-        !row[`Expected Date of Receipt of Pending Fees`] ||
-        !row[`Mode of Payment`]
-      ) {
+      if (!row[`FINAL FEE`] || !row[`Mode of Payment`]) {
         await session.abortTransaction();
         return res.status(400).json({
           error: "Fee details are required.",
@@ -177,7 +169,8 @@ exports.bulkUploadStudents = async (req, res) => {
         finalFees: row[`FINAL FEE`],
         approvedBy: row[`Approved By`] || "",
         amount: row[`Received Amount`] || 0,
-        dueDate: new Date(row[`Expected Date of Receipt of Pending Fees`]),
+        dueDate:
+          new Date(row[`Expected Date of Receipt of Pending Fees`]) || null,
         status:
           Number(row[`FINAL FEE`]) === Number(row[`Received Amount`])
             ? "PAID"

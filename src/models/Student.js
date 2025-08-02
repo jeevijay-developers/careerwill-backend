@@ -32,7 +32,7 @@ const studentSchema = new mongoose.Schema(
     tShirtSize: { type: String, default: "" },
     howDidYouHearAboutUs: { type: String, default: "" },
     programmeName: { type: String, default: "" },
-    emergencyContact: { type: String, required: true }, // emergency contact is required
+    emergencyContact: { type: String }, // emergency contact is required
     email: { type: String },
 
     parent: {
@@ -55,7 +55,7 @@ const studentSchema = new mongoose.Schema(
       ref: "Fee",
       default: null,
     },
-    phone: { type: String, required: true },
+    phone: { type: String },
     kit: [
       {
         type: mongoose.Schema.Types.ObjectId,

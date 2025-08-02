@@ -6,82 +6,122 @@ const TestScore = require("../models/TestScore");
 const Kit = require("../models/Kit");
 const Fee = require("../models/Fee");
 const Batch = require("../models/Batch");
-
+const { getNumericRollNumbers } = require("../helper/RollNumber");
 
 exports.createStudent = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const { name, batch, phone, image, parent, kit, address } = req.body;
+    const {
+      rollNo,
+      name,
+      className,
+      previousSchoolName,
+      medium,
+      DOB,
+      gender,
+      category,
+      state,
+      city,
+      pinCode,
+      permanentAddress,
+      tShirtSize,
+      mobileNumber,
+      howDidYouHearAboutUs,
+      programmeName,
+      emergencyContact,
+      email,
+      batch,
+      phone,
+      image,
+      parent,
+      kit,
+    } = req.body;
+
+    const rollNoUsed = await Student.findOne({ rollNo });
+    if (rollNoUsed) {
+      await session.abortTransaction();
+      return res.status(400).json({ error: "Roll number already exists." });
+    }
 
     // Validate required fields
-    if (!name || !batch || !phone || !parent) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!name || !batch || !mobileNumber) {
+      await session.abortTransaction();
+      return res
+        .status(400)
+        .json({ message: "Name/Batch/Mobile number required" });
+    }
+
+    if (parent) {
+      if (!parent.parentContact || !emergencyContact) {
+        await session.abortTransaction();
+        return res
+          .status(400)
+          .json({ message: "Parent Contact/Emergency Contact required" });
+      }
     }
 
     if (kit && !Array.isArray(kit)) {
+      await session.abortTransaction();
       return res.status(400).json({ message: "Kit must be an array" });
     }
-    // Validate kit ObjectIds
+
     if (kit && Array.isArray(kit)) {
       for (const kitId of kit) {
         if (!mongoose.Types.ObjectId.isValid(kitId)) {
+          await session.abortTransaction();
           return res.status(400).json({ message: `Invalid kit id: ${kitId}` });
         }
       }
     }
 
-    if (!image.url || !image.url === "") {
+    if (!image || !image.url || image.url.trim() === "") {
+      await session.abortTransaction();
       return res.status(400).json({ message: "Image URL is required" });
     }
-    let parentId;
-    let parentDoc = await User.findOne({
-      email: parent.email,
-      role: "PARENT",
-    }).session(session);
 
-    // If parent does not exist, create one
-    if (!parentDoc) {
-      const newParent = new User({
-        username: parent.username,
-        password: parent.password,
-        email: parent.email,
-        phone: parent.phone,
-        role: "PARENT",
-        students: [],
-      });
-      parentDoc = await newParent.save({ session });
-    }
-
-    parentId = parentDoc._id;
-
-    // Upload image if exists
-    let imageObject = image;
-    // Create new student
     const newStudent = new Student({
-      name,
-      batch,
-      phone,
+      rollNo,
+      name: name || "N/A",
+      class: className || "N/A",
+      previousSchoolName: previousSchoolName || "",
+      medium: medium || "",
+      DOB: DOB ? new Date(DOB) : null,
+      gender,
+      category: category || "",
+      state: state || "",
+      city: city || "",
+      pinCode: pinCode || "",
+      permanentAddress: permanentAddress || "",
+      mobileNumber,
+      tShirtSize: tShirtSize || "",
+      howDidYouHearAboutUs: howDidYouHearAboutUs || "",
+      programmeName: programmeName || "",
+      emergencyContact: emergencyContact || "",
+      email: email || "",
+      phone: mobileNumber,
       kit: kit || [],
-      parent: parentId,
-      address,
-      image: imageObject,
+      image,
+      parent: {
+        occupation: parent?.occupation || "",
+        fatherName: parent?.fatherName || "",
+        motherName: parent?.motherName || "",
+        parentContact: parent?.parentContact || "",
+        email: parent?.email || "",
+      },
     });
 
     await newStudent.save({ session });
 
-    // Push student to parent's student list
-    parentDoc.students = parentDoc.students || [];
-    parentDoc.students.push(newStudent._id);
-    await parentDoc.save({ session });
-
     await session.commitTransaction();
-    // Populate kit for response
-    await newStudent.populate('kit');
-    res
-      .status(201)
-      .json({ message: "Student created successfully", student: newStudent });
+
+    await newStudent.populate("kit");
+
+    res.status(201).json({
+      message: "Student created successfully",
+      student: newStudent,
+    });
   } catch (err) {
     await session.abortTransaction();
     console.error("Error creating student:", err);
@@ -138,7 +178,9 @@ exports.getAllStudents = async (req, res) => {
 
 exports.getStudentById = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id).populate("parent").populate("kit");
+    const student = await Student.findById(req.params.id)
+      .populate("parent")
+      .populate("kit");
     if (!student) return res.status(404).json({ message: "Student not found" });
     res.status(200).json(student);
   } catch (err) {
@@ -199,18 +241,22 @@ exports.getStudentWithIncompleteKit = async (req, res) => {
 
     // Fetch all kits
     const allKits = await Kit.find({}, "_id");
-    const allKitIds = allKits.map(kit => kit._id.toString());
+    const allKitIds = allKits.map((kit) => kit._id.toString());
 
     // Fetch all students in the batch
     const students = await Student.find({
-      batch: batchId
-    }).populate("parent").populate("kit");
+      batch: batchId,
+    })
+      .populate("parent")
+      .populate("kit");
 
     // Filter students who do not have all kits
-    const incompleteStudents = students.filter(student => {
-      const studentKitIds = (student.kit || []).map(k => (k._id ? k._id.toString() : k.toString()));
+    const incompleteStudents = students.filter((student) => {
+      const studentKitIds = (student.kit || []).map((k) =>
+        k._id ? k._id.toString() : k.toString()
+      );
       // If student is missing at least one kit
-      return allKitIds.some(kitId => !studentKitIds.includes(kitId));
+      return allKitIds.some((kitId) => !studentKitIds.includes(kitId));
     });
 
     res.status(200).json(incompleteStudents);
@@ -242,10 +288,10 @@ exports.updateStudentKit = async (req, res) => {
     }
 
     // Merge kits (avoid duplicates if needed)
-    student.kit = [...(student.kit || []), ...kit.map(id => id.toString())];
+    student.kit = [...(student.kit || []), ...kit.map((id) => id.toString())];
 
     // Remove duplicates
-    student.kit = [...new Set(student.kit.map(id => id.toString()))];
+    student.kit = [...new Set(student.kit.map((id) => id.toString()))];
 
     await student.save();
     await student.populate("kit");
@@ -260,7 +306,7 @@ exports.updateStudentKit = async (req, res) => {
   }
 };
 
-exports.getAllStudentFees = async (req, res) =>{
+exports.getAllStudentFees = async (req, res) => {
   try {
     const fees = await Fee.find();
     res.status(200).json(fees);
@@ -270,7 +316,7 @@ exports.getAllStudentFees = async (req, res) =>{
   }
 };
 
-exports.searchStudents = async (req, res)=> {
+exports.searchStudents = async (req, res) => {
   const { query } = req.query;
   if (!query) {
     return res.status(400).json({ message: "Query parameter is required" });
@@ -280,12 +326,10 @@ exports.searchStudents = async (req, res)=> {
     const regex = new RegExp(query, "i");
     let batchIds = [];
     if (Batch) {
-      const batches = await Batch.find({ name: regex }, '_id');
-      batchIds = batches.map(b => b._id);
+      const batches = await Batch.find({ name: regex }, "_id");
+      batchIds = batches.map((b) => b._id);
     }
-    const orConditions = [
-      { name: regex }
-    ];
+    const orConditions = [{ name: regex }];
     // Only add rollNo if query is a valid number
     if (!isNaN(query)) {
       orConditions.push({ rollNo: Number(query) });
@@ -299,6 +343,29 @@ exports.searchStudents = async (req, res)=> {
     res.status(200).json(students);
   } catch (err) {
     console.error("Error searching students:", err);
-    return res.status(500).json({ message: "Internal server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
-}
+};
+
+exports.checkRollNumberExists = async (req, res) => {
+  try {
+    const { rollNumber } = req.params;
+    if (!rollNumber) {
+      return res.status(400).json({ message: "Roll number is required" });
+    }
+    const student = await Student.findOne({ rollNo: rollNumber });
+    if (student) {
+      const rollNumbers = await getNumericRollNumbers();
+      return res
+        .status(200)
+        .json({ exists: true, rollNumbers: Array.from(rollNumbers) });
+    } else {
+      return res.status(200).json({ exists: false });
+    }
+  } catch (err) {
+    console.error("Error checking roll number:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

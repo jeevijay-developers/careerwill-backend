@@ -8,7 +8,8 @@ const {
   getStudentTestScores,
   getStudentWithIncompleteKit,
   updateStudentKit,
-  searchStudents
+  searchStudents,
+  checkRollNumberExists,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -29,5 +30,7 @@ router.get("/find-parent-by-email/:email", findParentByEmail);
 router.get("/get-student-test-scores/:rollNumber", getStudentTestScores);
 
 router.get("/search-students", searchStudents);
+
+router.get("/check-roll-number/:rollNumber", checkRollNumberExists);
 
 module.exports = router;

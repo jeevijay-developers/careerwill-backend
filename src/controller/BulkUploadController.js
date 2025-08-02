@@ -15,10 +15,22 @@ exports.uploadTestScores = async (req, res) => {
 
   try {
     // --- 1. Parse the Excel File ---
+    const { date, name } = req.body;
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (!date || !name) {
+      return res.status(400).json({ message: "Date and Name are required." });
+    }
+
+    const nameExists = await TestScore.findOne({ name });
+    if (nameExists) {
+      return res
+        .status(400)
+        .json({ message: "A test score with this name already exists." });
+    }
 
     if (data.length === 0) {
       return res
@@ -39,7 +51,8 @@ exports.uploadTestScores = async (req, res) => {
         total: row["Total"] || 0,
         rank: row["Test Rank"] || 0,
         subjects: [],
-        date: row["Test Date"] ? new Date(row["Test Date"]) : new Date(),
+        date: new Date(date),
+        name: name,
       };
       // create subjects array from the row
       const subjects = getAllSubjects();
@@ -168,7 +181,10 @@ exports.bulkUploadStudents = async (req, res) => {
         discount: row[`Discount`] || 0,
         finalFees: row[`FINAL FEE`],
         approvedBy: row[`Approved By`] || "",
-        amount: row[`Received Amount`] || 0,
+        paidAmount: row[`Received Amount`] || 0,
+        pendingAmount:
+          row[`Pending Fees`] ||
+          Number(row[`FINAL FEE`]) - row[`Received Amount`],
         dueDate:
           new Date(row[`Expected Date of Receipt of Pending Fees`]) || null,
         status:

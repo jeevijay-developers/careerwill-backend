@@ -36,6 +36,13 @@ const testScoreSchema = new mongoose.Schema(
     total: { type: Number, required: true },
     rank: { type: Number, required: true },
     date: { type: Date, required: true, default: Date.now() },
+    name: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+      unique: true,
+    },
   },
   { timestamps: true }
 );

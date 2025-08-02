@@ -12,7 +12,6 @@ const feeSchema = new mongoose.Schema(
     finalFees: { type: Number, required: true },
     approvedBy: { type: String, default: "" },
 
-    amount: { type: Number, required: true },
     paidAmount: { type: Number, default: 0 },
     dueDate: { type: Date, required: true },
     pendingAmount: { type: Number, default: 0 },

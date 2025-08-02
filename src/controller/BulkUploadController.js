@@ -45,7 +45,7 @@ exports.uploadTestScores = async (req, res) => {
       const scoreObject = {
         rollNumber: row["Roll No."],
         student: row["Student Name"]?.toLowerCase().trim() || "N/A",
-        father: row["Student Name"]?.toLowerCase().trim() || "N/A",
+        father: row["Students Father Name"]?.toLowerCase().trim() || "N/A",
         batch: row["Batch"] || "N/A",
         percentile: row["Percentile"] || 0,
         total: row["Total"] || 0,

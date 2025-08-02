@@ -90,10 +90,12 @@ exports.createFeeSubmission = async (req, res) => {
       console.log(new Date(dateOfReceipt));
 
       // feeDoc.amount += amount;
-      feeDoc.paidAmount += paidAmount;
-      feeDoc.pendingAmount -= paidAmount;
+      feeDoc.paidAmount = Number(feeDoc.paidAmount) + Number(paidAmount);
+      feeDoc.pendingAmount = Number(feeDoc.pendingAmount) - Number(paidAmount);
       feeDoc.status =
-        feeDoc.finalFees == feeDoc.paidAmount ? "PAID" : "PARTIAL";
+        Number(feeDoc.finalFees) == Number(feeDoc.paidAmount)
+          ? "PAID"
+          : "PARTIAL";
       feeDoc.submissions.push({
         dateOfReceipt: new Date(dateOfReceipt),
         amount: paidAmount,

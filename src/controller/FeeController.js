@@ -119,7 +119,13 @@ exports.createFeeSubmission = async (req, res) => {
 
 exports.getAllFees = async (req, res) => {
   try {
-    const fees = await Fee.find();
+    const page = parseInt(req.query.page) || 1; // Default page = 1
+    const limit = parseInt(req.query.limit) || 10; // Default limit = 10
+    const skip = (page - 1) * limit;
+
+    const total = await Fee.countDocuments();
+    const fees = await Fee.find().skip(skip).limit(limit);
+
     // For each fee, fetch the student name by rollNo
     const feesWithNames = await Promise.all(
       fees.map(async (fee) => {
@@ -130,9 +136,16 @@ exports.getAllFees = async (req, res) => {
         };
       })
     );
-    res.status(200).json(feesWithNames);
+
+    res.status(200).json({
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+      itemsPerPage: limit,
+      data: feesWithNames,
+    });
   } catch (err) {
-    console.error("Error fetching all fees:", err);
+    console.error("Error fetching paginated fees:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

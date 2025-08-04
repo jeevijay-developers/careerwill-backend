@@ -6,6 +6,7 @@ const feeSchema = new mongoose.Schema(
     studentRollNo: {
       type: Number,
       required: true,
+      unique: true,
     },
     totalFees: { type: Number, required: true },
     discount: { type: Number, default: 0 },

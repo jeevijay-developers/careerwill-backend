@@ -7,6 +7,7 @@ const Kit = require("../models/Kit");
 const Fee = require("../models/Fee");
 const Batch = require("../models/Batch");
 const { getNumericRollNumbers } = require("../helper/RollNumber");
+const Attendance = require("../models/Attendance");
 
 exports.createStudent = async (req, res) => {
   const session = await mongoose.startSession();
@@ -385,6 +386,26 @@ exports.getStudentsByParentMobileNumber = async (req, res) => {
     res.status(200).json({ data: students, status: true });
   } catch (err) {
     console.error("Error fetching students by parent mobile number:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAttendenceByRollNumber = async (req, res) => {
+  try {
+    const { rollNumber } = req.params;
+    if (!rollNumber) {
+      return res.status(400).json({ message: "Roll number is required" });
+    }
+    // const student = await Student.findOne({ rollNo: rollNumber });
+    // if (!student) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No student found", status: false });
+    // }
+    const data = await Attendance.find({ rollNo: rollNumber });
+    res.status(200).json({ data: data, status: true });
+  } catch (err) {
+    console.error("Error fetching attendence by roll number:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

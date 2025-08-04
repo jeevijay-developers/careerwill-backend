@@ -4,6 +4,7 @@ const { getAllSubjects } = require("../helper/Subject");
 const TestScore = require("../models/TestScore");
 const Fee = require("../models/Fee");
 const Student = require("../models/Student");
+const Attendance = require("../models/Attendance");
 exports.uploadTestScores = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
@@ -224,3 +225,60 @@ exports.bulkUploadStudents = async (req, res) => {
     session.endSession();
   }
 };
+
+exports.bulkUploadAttendence = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  try {
+    const { date } = req.body;
+
+    console.log(new Date(date));
+
+    if (!date) {
+      return res.status(400).json({ error: "Date is required" });
+    }
+    const insertedAttendences = [];
+    const workbook = xlsx.read(req.file.buffer, {
+      cellDates: true,
+      type: "buffer",
+    });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = xlsx.utils
+      .sheet_to_json(workbook.Sheets[sheetName])
+      .slice(5);
+
+    const attendenceData = [];
+    for (const row of sheetData) {
+      const attendenceObject = {
+        rollNo: row[`Career Will Information Centre Pvt LTD`] || "N/A",
+        name: row[`__EMPTY`] || "N/A",
+        inTime: row[`__EMPTY_2`] || "N/A",
+        outTime: row[`__EMPTY_3`] || "N/A",
+        lateArrival: row[`__EMPTY_4`] || "N/A",
+        earlyDeparture: row[`__EMPTY_5`] || "N/A",
+        workingHours: row[`__EMPTY_6`] || "N/A",
+        otDuration: row[`__EMPTY_7`] || "N/A",
+        presentStatus: row[`__EMPTY_8`] || "N/A",
+        date: new Date(date),
+      };
+
+      attendenceData.push(attendenceObject);
+    }
+
+    const data = await Attendance.insertMany(attendenceData, { session });
+    await session.commitTransaction();
+    res.status(201).json({
+      message: "Bulk upload successful",
+      insertedCount: insertedAttendences.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Error in bulk upload:", err);
+    await session.abortTransaction();
+    res.status(500).json({ error: "Bulk upload failed", details: err.message });
+  } finally {
+    session.endSession();
+  }
+};
+// })

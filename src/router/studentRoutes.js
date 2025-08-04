@@ -11,6 +11,7 @@ const {
   searchStudents,
   checkRollNumberExists,
   getStudentsByParentMobileNumber,
+  getAttendenceByRollNumber,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -37,6 +38,10 @@ router.get("/check-roll-number/:rollNumber", checkRollNumberExists);
 router.get(
   "/get-students-from-parents-number/:mobileNumber",
   getStudentsByParentMobileNumber
+);
+router.get(
+  "/get-attendence-by-rollnumber/:rollNumber",
+  getAttendenceByRollNumber
 );
 
 module.exports = router;

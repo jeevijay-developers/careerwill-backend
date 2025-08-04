@@ -178,9 +178,7 @@ exports.getAllStudents = async (req, res) => {
 
 exports.getStudentById = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id)
-      .populate("parent")
-      .populate("kit");
+    const student = await Student.findById(req.params.id).populate("kit");
     if (!student) return res.status(404).json({ message: "Student not found" });
     res.status(200).json(student);
   } catch (err) {

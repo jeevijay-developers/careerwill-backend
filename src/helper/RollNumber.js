@@ -24,3 +24,5 @@ exports.getNumericRollNumbers = async (req, res) => {
     return new Error("Error generating roll numbers");
   }
 };
+
+exports.generateOTP = () => Math.floor(100000 + Math.random() * 900000);

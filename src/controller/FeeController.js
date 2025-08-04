@@ -60,18 +60,18 @@ exports.createFeeSubmission = async (req, res) => {
 
       feeDoc = new Fee({
         studentRollNo,
-        totalFees,
+        totalFees: Number(totalFees),
         discount,
-        finalFees,
+        finalFees: Number(finalFees),
         approvedBy,
-        paidAmount,
+        paidAmount: Number(paidAmount),
         dueDate: new Date(dueDate),
-        pendingAmount: finalFees - paidAmount,
-        status: finalFees === paidAmount ? "PAID" : "PARTIAL",
+        pendingAmount: Number(finalFees) - Number(paidAmount),
+        status: Number(finalFees) === Number(paidAmount) ? "PAID" : "PARTIAL",
         submissions: [
           {
             dateOfReceipt: new Date(dateOfReceipt),
-            amount: paidAmount,
+            amount: Number(paidAmount),
             mode,
             receiptNumber,
             UTR,

@@ -11,6 +11,7 @@ const {
   confirmCode,
   resetPassword,
   numberLoginForParent,
+  varifyLoginOTP,
 } = require("../controller/AuthController");
 
 router.post("/login", login);
@@ -27,6 +28,7 @@ router.get("/verify-token", verifyToken, async (req, res) => {
 });
 
 router.post("/parent-login", numberLoginForParent);
+router.post("/varify-login-otp", varifyLoginOTP);
 router.post("/generate-reset-code", generateCode);
 router.post("/confirm-reset-code", confirmCode);
 router.post("/reset-password", resetPassword);

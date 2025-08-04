@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const LoginOPT = require("../models/LoginOPT");
 const { comparePassword } = require("../middleware/bcrypt");
 const { generateToken } = require("../middleware/jwt");
 const PasswordReset = require("../models/PasswordReset");
@@ -6,6 +7,7 @@ const mongoose = require("mongoose");
 const { sendMail } = require("../middleware/mailer");
 const bcrypt = require("bcrypt");
 const Student = require("../models/Student");
+const { generateOTP } = require("../helper/RollNumber");
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -51,11 +53,81 @@ exports.numberLoginForParent = async (req, res) => {
         message: "There is no student associated with this mobile number",
       });
     }
-    const token = await generateToken(mobileNumber);
+    // const token = await generateToken(mobileNumber);
+
+    const OTP = generateOTP();
+    const message = `${OTP} is your one time password to proceed on Careerwill App. It is valid for 10 minutes. Do not share your OTP with anyone.`;
+
+    const url = new URL("http://sms.primeclick.in/api/mt/SendSMS");
+
+    url.searchParams.append("user", "CAREER_WILL");
+    url.searchParams.append("password", "Career@1");
+    url.searchParams.append("senderid", "CWINFO");
+    url.searchParams.append("channel", "Trans");
+    url.searchParams.append("DCS", "0");
+    url.searchParams.append("flashsms", "0");
+    url.searchParams.append("number", mobileNumber);
+    url.searchParams.append("text", message);
+    url.searchParams.append("route", "15");
+    url.searchParams.append("DLTTemplateId", "1107160613069420676");
+
+    // save the data in the DB
+    await LoginOPT.create({
+      number: mobileNumber,
+      code: OTP,
+      isUsed: false,
+    });
+
+    const response = await fetch(url.toString());
+    const data = await response.json();
+
+    if (data.ErrorCode === "000") {
+      return res.status(200).json({
+        success: true,
+        message: "OTP sent successfully",
+        jobId: data.JobId,
+        messageId: data.MessageData[0].MessageId,
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: data.ErrorMessage || "Failed to send SMS",
+      });
+    }
+
     // send OTP
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.varifyLoginOTP = async (req, res) => {
+  const { mobileNumber, code } = req.body;
+  try {
+    if (!mobileNumber || !code) {
+      return res.status(400).json({ message: "Please provide mobile number" });
+    }
+    const otp = await LoginOPT.findOne({
+      number: mobileNumber,
+      code: code,
+      isUsed: false,
+    });
+    if (!otp) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // ! fetch all the users
+
+    const token = await generateToken(mobileNumber);
+    await LoginOPT.deleteOne({ number: mobileNumber, code: code });
+    const students = await Student.find({
+      "parent.parentContact": mobileNumber,
+    });
+
     return res
       .status(200)
-      .json({ message: "Login successful", token: token, students });
+      .json({ message: "OTP varified successfully", data: students, token });
   } catch (error) {
     console.error("Error logging in user:", error);
     return res.status(500).json({ error: error.message });

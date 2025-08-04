@@ -10,6 +10,7 @@ const {
   updateStudentKit,
   searchStudents,
   checkRollNumberExists,
+  getStudentsByParentMobileNumber,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -32,5 +33,10 @@ router.get("/get-student-test-scores/:rollNumber", getStudentTestScores);
 router.get("/search-students", searchStudents);
 
 router.get("/check-roll-number/:rollNumber", checkRollNumberExists);
+
+router.get(
+  "/get-students-from-parents-number/:mobileNumber",
+  getStudentsByParentMobileNumber
+);
 
 module.exports = router;

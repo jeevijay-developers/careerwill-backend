@@ -369,3 +369,24 @@ exports.checkRollNumberExists = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.getStudentsByParentMobileNumber = async (req, res) => {
+  try {
+    const { mobileNumber } = req.params;
+    if (!mobileNumber) {
+      return res.status(400).json({ message: "Mobile number is required" });
+    }
+    const students = await Student.find({
+      "parent.parentContact": mobileNumber,
+    });
+    if (!students) {
+      return res
+        .status(404)
+        .json({ message: "No student found", status: false });
+    }
+    res.status(200).json({ data: students, status: true });
+  } catch (err) {
+    console.error("Error fetching students by parent mobile number:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

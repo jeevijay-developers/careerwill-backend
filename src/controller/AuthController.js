@@ -5,6 +5,7 @@ const PasswordReset = require("../models/PasswordReset");
 const mongoose = require("mongoose");
 const { sendMail } = require("../middleware/mailer");
 const bcrypt = require("bcrypt");
+const Student = require("../models/Student");
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -29,6 +30,32 @@ exports.login = async (req, res) => {
     return res
       .status(200)
       .json({ message: "Login successful", token: token, user });
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.numberLoginForParent = async (req, res) => {
+  const { mobileNumber } = req.body;
+  try {
+    if (!mobileNumber) {
+      return res.status(400).json({ message: "Please provide mobile number" });
+    }
+    const students = await Student.find({
+      "parent.parentContact": mobileNumber,
+    });
+
+    if (!students || students.length === 0) {
+      return res.status(401).json({
+        message: "There is no student associated with this mobile number",
+      });
+    }
+    const token = await generateToken(mobileNumber);
+    // send OTP
+    return res
+      .status(200)
+      .json({ message: "Login successful", token: token, students });
   } catch (error) {
     console.error("Error logging in user:", error);
     return res.status(500).json({ error: error.message });

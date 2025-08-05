@@ -5,6 +5,7 @@ const TestScore = require("../models/TestScore");
 const Fee = require("../models/Fee");
 const Student = require("../models/Student");
 const Attendance = require("../models/Attendance");
+const { parseDate } = require("../helper/RollNumber");
 exports.uploadTestScores = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
@@ -42,6 +43,9 @@ exports.uploadTestScores = async (req, res) => {
     const scoresToInsert = [];
     // const processedStudents = new Map(); // Cache to avoid duplicate DB lookups
 
+    const DATE = parseDate(date).toISOString();
+    // console.log(DATE);
+
     for (const row of data) {
       const scoreObject = {
         rollNumber: row["Roll No."],
@@ -52,7 +56,7 @@ exports.uploadTestScores = async (req, res) => {
         total: row["Total"] || 0,
         rank: row["Test Rank"] || 0,
         subjects: [],
-        date: new Date(date),
+        date: DATE,
         name: name,
       };
       // create subjects array from the row
@@ -185,9 +189,10 @@ exports.bulkUploadStudents = async (req, res) => {
         paidAmount: row[`Received Amount`] || 0,
         pendingAmount:
           row[`Pending Fees`] ||
-          Number(row[`FINAL FEE`]) - row[`Received Amount`],
-        dueDate:
-          new Date(row[`Expected Date of Receipt of Pending Fees`]) || null,
+          Number(row[`FINAL FEE`]) - Number(row[`Received Amount`]),
+        dueDate: parseDate(
+          row[`Expected Date of Receipt of Pending Fees`]
+        ).toISOString(),
         status:
           Number(row[`FINAL FEE`]) === Number(row[`Received Amount`])
             ? "PAID"
@@ -196,10 +201,10 @@ exports.bulkUploadStudents = async (req, res) => {
           {
             amount: row[`Received Amount`],
             mode: row[`Mode of Payment`] || "N/A",
-            dateOfReceipt: new Date(row[`Date of Receipt`]),
+            dateOfReceipt: parseDate(row[`Date of Receipt`]).toISOString(),
             receiptNumber: row[`Receipt No.`] || "",
             UTR: row[`UTR NO.`] || "",
-            date: new Date(row[`Date of Receipt`]), // required in schema
+            date: parseDate(row[`Date of Receipt`]).toISOString(), // required in schema
           },
         ],
       });
@@ -229,49 +234,54 @@ exports.bulkUploadStudents = async (req, res) => {
 exports.bulkUploadAttendence = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
   try {
     const { date } = req.body;
-
-    console.log(new Date(date));
 
     if (!date) {
       return res.status(400).json({ error: "Date is required" });
     }
-    const insertedAttendences = [];
+
+    const DATE = parseDate(date).toISOString();
+    if (!DATE) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
     const workbook = xlsx.read(req.file.buffer, {
       cellDates: true,
       type: "buffer",
     });
+
     const sheetName = workbook.SheetNames[0];
     const sheetData = xlsx.utils
       .sheet_to_json(workbook.Sheets[sheetName])
-      .slice(5);
+      .slice(5); // Skip first 5 rows (header)
 
-    const attendenceData = [];
-    for (const row of sheetData) {
-      const attendenceObject = {
-        rollNo: row[`Career Will Information Centre Pvt LTD`] || "N/A",
-        name: row[`__EMPTY`] || "N/A",
-        inTime: row[`__EMPTY_2`] || "N/A",
-        outTime: row[`__EMPTY_3`] || "N/A",
-        lateArrival: row[`__EMPTY_4`] || "N/A",
-        earlyDeparture: row[`__EMPTY_5`] || "N/A",
-        workingHours: row[`__EMPTY_6`] || "N/A",
-        otDuration: row[`__EMPTY_7`] || "N/A",
-        presentStatus: row[`__EMPTY_8`] || "N/A",
-        date: new Date(date),
-      };
+    const attendenceData = sheetData.map((row) => ({
+      rollNo: row[`Career Will Information Centre Pvt LTD`] || "N/A",
+      name: row[`__EMPTY`] || "N/A",
+      inTime: row[`__EMPTY_2`] || "N/A",
+      outTime: row[`__EMPTY_3`] || "N/A",
+      lateArrival: row[`__EMPTY_4`] || "N/A",
+      earlyDeparture: row[`__EMPTY_5`] || "N/A",
+      workingHours: row[`__EMPTY_6`] || "N/A",
+      otDuration: row[`__EMPTY_7`] || "N/A",
+      presentStatus: row[`__EMPTY_8`] || "N/A",
+      date: DATE,
+    }));
 
-      attendenceData.push(attendenceObject);
-    }
+    const insertedAttendences = await Attendance.insertMany(attendenceData, {
+      session,
+    });
 
-    const data = await Attendance.insertMany(attendenceData, { session });
     await session.commitTransaction();
+
     res.status(201).json({
       message: "Bulk upload successful",
       insertedCount: insertedAttendences.length,
-      data,
+      data: insertedAttendences,
     });
   } catch (err) {
     console.error("Error in bulk upload:", err);
@@ -281,4 +291,5 @@ exports.bulkUploadAttendence = async (req, res) => {
     session.endSession();
   }
 };
+
 // })

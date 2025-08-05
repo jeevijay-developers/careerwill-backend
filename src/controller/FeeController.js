@@ -1,3 +1,4 @@
+const { parseDate } = require("../helper/RollNumber");
 const Fee = require("../models/Fee");
 const Student = require("../models/Student");
 
@@ -65,12 +66,12 @@ exports.createFeeSubmission = async (req, res) => {
         finalFees: Number(finalFees),
         approvedBy,
         paidAmount: Number(paidAmount),
-        dueDate: new Date(dueDate),
+        dueDate: parseDate(dueDate),
         pendingAmount: Number(finalFees) - Number(paidAmount),
         status: Number(finalFees) === Number(paidAmount) ? "PAID" : "PARTIAL",
         submissions: [
           {
-            dateOfReceipt: new Date(dateOfReceipt),
+            dateOfReceipt: parseDate(dateOfReceipt),
             amount: Number(paidAmount),
             mode,
             receiptNumber,
@@ -87,7 +88,7 @@ exports.createFeeSubmission = async (req, res) => {
     } else {
       // Update existing fee document
       feeDoc = await Fee.findById(student.fee._id); // safe refetch in case populate fails
-      console.log(new Date(dateOfReceipt));
+      // console.log(parseDate(dateOfReceipt));
 
       // feeDoc.amount += amount;
       feeDoc.paidAmount = Number(feeDoc.paidAmount) + Number(paidAmount);
@@ -97,7 +98,7 @@ exports.createFeeSubmission = async (req, res) => {
           ? "PAID"
           : "PARTIAL";
       feeDoc.submissions.push({
-        dateOfReceipt: new Date(dateOfReceipt),
+        dateOfReceipt: parseDate(dateOfReceipt),
         amount: paidAmount,
         mode,
         receiptNumber,

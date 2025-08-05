@@ -14,7 +14,7 @@ const feeSchema = new mongoose.Schema(
     approvedBy: { type: String, default: "" },
 
     paidAmount: { type: Number, default: 0 },
-    dueDate: { type: Date, required: true },
+    dueDate: { type: Date },
     pendingAmount: { type: Number, default: 0 },
     status: {
       type: String,
@@ -24,10 +24,10 @@ const feeSchema = new mongoose.Schema(
     submissions: [
       {
         // date: { type: Date, required: true },
-        amount: { type: Number, required: true },
-        mode: { type: String, required: true },
-        dateOfReceipt: { type: Date, required: true },
-        receiptNumber: { type: String, required: true },
+        amount: { type: Number },
+        mode: { type: String },
+        dateOfReceipt: { type: Date },
+        receiptNumber: { type: String },
         UTR: { type: String, default: "" },
       },
     ],

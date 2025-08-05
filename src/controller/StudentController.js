@@ -6,7 +6,7 @@ const TestScore = require("../models/TestScore");
 const Kit = require("../models/Kit");
 const Fee = require("../models/Fee");
 const Batch = require("../models/Batch");
-const { getNumericRollNumbers } = require("../helper/RollNumber");
+const { getNumericRollNumbers, parseDate } = require("../helper/RollNumber");
 const Attendance = require("../models/Attendance");
 
 exports.createStudent = async (req, res) => {
@@ -88,7 +88,7 @@ exports.createStudent = async (req, res) => {
       class: className || "N/A",
       previousSchoolName: previousSchoolName || "",
       medium: medium || "",
-      DOB: DOB ? new Date(DOB) : null,
+      DOB: DOB || "",
       gender,
       category: category || "",
       state: state || "",
@@ -407,5 +407,48 @@ exports.getAttendenceByRollNumber = async (req, res) => {
   } catch (err) {
     console.error("Error fetching attendence by roll number:", err);
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// controllers/attendanceController.js
+// const Attendance = require("../models/Attendance");
+
+exports.getAttendanceByDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        message: "Date query parameter is required in YYYY-MM-DD format",
+      });
+    }
+
+    const start = parseDate(date);
+    if (!start) {
+      return res.status(400).json({
+        message: "Invalid date format. Use YYYY-MM-DD.",
+      });
+    }
+
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 1); // safe UTC increment
+
+    console.log(
+      "Querying date between:",
+      start.toISOString(),
+      "and",
+      end.toISOString()
+    );
+
+    const records = await Attendance.find({
+      date: { $gte: start, $lt: end },
+    }).sort({ rollNo: 1 });
+
+    res.status(200).json(records);
+  } catch (err) {
+    console.error("Error fetching attendance by date:", err);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };

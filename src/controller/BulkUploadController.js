@@ -201,7 +201,7 @@ exports.bulkUploadStudents = async (req, res) => {
             : "PARTIAL",
         submissions: [
           {
-            amount: row[`Received Amount`],
+            amount: row[`Received Amount`] || 0,
             mode: row[`Mode of Payment`] || "N/A",
             dateOfReceipt: parseDate(row[`Date of Receipt`])
               ? parseDate(row[`Date of Receipt`]).toISOString()

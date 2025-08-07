@@ -28,18 +28,18 @@ const studentSchema = new mongoose.Schema(
     city: { type: String, default: "" },
     pinCode: { type: String, default: "" },
     permanentAddress: { type: String, default: "" },
-    mobileNumber: { type: String, required: true }, // mohbile number is required
+    mobileNumber: { type: String, required: true },
     tShirtSize: { type: String, default: "" },
     howDidYouHearAboutUs: { type: String, default: "" },
     programmeName: { type: String, default: "" },
-    emergencyContact: { type: String }, // emergency contact is required
+    emergencyContact: { type: String },
     email: { type: String },
 
     parent: {
       occupation: { type: String, default: "" },
       fatherName: { type: String, default: "" },
       motherName: { type: String, default: "" },
-      parentContact: { type: String, required: true }, // parent contact is required
+      parentContact: { type: String, required: true },
       email: { type: String, default: "" },
     },
 

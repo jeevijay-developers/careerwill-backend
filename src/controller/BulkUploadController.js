@@ -43,7 +43,7 @@ exports.uploadTestScores = async (req, res) => {
     const scoresToInsert = [];
     // const processedStudents = new Map(); // Cache to avoid duplicate DB lookups
 
-    const DATE = parseDate(date).toISOString();
+    const DATE = parseDate(date) ? parseDate(date).toISOString() : null;
     // console.log(DATE);
 
     for (const row of data) {
@@ -190,9 +190,11 @@ exports.bulkUploadStudents = async (req, res) => {
         pendingAmount:
           row[`Pending Fees`] ||
           Number(row[`FINAL FEE`]) - Number(row[`Received Amount`]),
-        dueDate: parseDate(
-          row[`Expected Date of Receipt of Pending Fees`]
-        ).toISOString(),
+        dueDate: parseDate(row[`Expected Date of Receipt of Pending Fees`])
+          ? parseDate(
+              row[`Expected Date of Receipt of Pending Fees`]
+            ).toISOString()
+          : null,
         status:
           Number(row[`FINAL FEE`]) === Number(row[`Received Amount`])
             ? "PAID"
@@ -201,10 +203,14 @@ exports.bulkUploadStudents = async (req, res) => {
           {
             amount: row[`Received Amount`],
             mode: row[`Mode of Payment`] || "N/A",
-            dateOfReceipt: parseDate(row[`Date of Receipt`]).toISOString(),
+            dateOfReceipt: parseDate(row[`Date of Receipt`])
+              ? parseDate(row[`Date of Receipt`]).toISOString()
+              : null,
             receiptNumber: row[`Receipt No.`] || "",
             UTR: row[`UTR NO.`] || "",
-            date: parseDate(row[`Date of Receipt`]).toISOString(), // required in schema
+            date: parseDate(row[`Date of Receipt`])
+              ? parseDate(row[`Date of Receipt`])
+              : null, // required in schema
           },
         ],
       });
@@ -244,7 +250,7 @@ exports.bulkUploadAttendence = async (req, res) => {
       return res.status(400).json({ error: "Date is required" });
     }
 
-    const DATE = parseDate(date).toISOString();
+    const DATE = parseDate(date) ? parseDate.toISOString() : null;
     if (!DATE) {
       return res.status(400).json({ error: "Invalid date format" });
     }

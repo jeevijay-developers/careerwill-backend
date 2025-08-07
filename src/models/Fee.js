@@ -8,9 +8,9 @@ const feeSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    totalFees: { type: Number, required: true },
+    totalFees: { type: Number, required: true, default: 0 },
     discount: { type: Number, default: 0 },
-    finalFees: { type: Number, required: true },
+    finalFees: { type: Number, required: true, default: 0 },
     approvedBy: { type: String, default: "" },
 
     paidAmount: { type: Number, default: 0 },

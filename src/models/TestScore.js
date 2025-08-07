@@ -9,13 +9,11 @@ const testScoreSchema = new mongoose.Schema(
     },
     student: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
     },
     father: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
     },
@@ -28,17 +26,16 @@ const testScoreSchema = new mongoose.Schema(
 
     subjects: [
       {
-        name: { type: String, required: true, lowercase: true, trim: true },
+        name: { type: String, lowercase: true, trim: true },
         marks: { type: Number, required: true },
       },
     ],
-    percentile: { type: Number, required: true },
-    total: { type: Number, required: true },
-    rank: { type: Number, required: true },
-    date: { type: Date, required: true, default: Date.now() },
+    percentile: { type: Number },
+    total: { type: Number },
+    rank: { type: Number },
+    date: { type: Date, default: Date.now() },
     name: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
     },

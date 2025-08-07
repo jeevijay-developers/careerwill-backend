@@ -64,7 +64,7 @@ exports.uploadTestScores = async (req, res) => {
       for (const prop in row) {
         if (subjects.includes(`${prop}`)) {
           // console.log(prop);
-          const subjectName = prop;
+          const subjectName = prop ?? "N/A";
           const marks = row[prop];
           if (marks !== undefined && marks !== null) {
             scoreObject.subjects.push({

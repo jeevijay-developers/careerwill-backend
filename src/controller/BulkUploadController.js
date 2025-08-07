@@ -49,8 +49,8 @@ exports.uploadTestScores = async (req, res) => {
     for (const row of data) {
       const scoreObject = {
         rollNumber: row["Roll No."],
-        student: row["Student Name"]?.toLowerCase().trim() || "N/A",
-        father: row["Students Father Name"]?.toLowerCase().trim() || "N/A",
+        student: row["Student Name"] || "N/A",
+        father: row["Students Father Name"] || "N/A",
         batch: row["Batch"] || "N/A",
         percentile: row["Percentile"] || 0,
         total: row["Total"] || 0,
@@ -64,7 +64,7 @@ exports.uploadTestScores = async (req, res) => {
       for (const prop in row) {
         if (subjects.includes(`${prop}`)) {
           // console.log(prop);
-          const subjectName = prop.toLowerCase().trim();
+          const subjectName = prop;
           const marks = row[prop];
           if (marks !== undefined && marks !== null) {
             scoreObject.subjects.push({

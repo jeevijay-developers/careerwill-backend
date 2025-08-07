@@ -250,7 +250,7 @@ exports.bulkUploadAttendence = async (req, res) => {
       return res.status(400).json({ error: "Date is required" });
     }
 
-    const DATE = parseDate(date) ? parseDate.toISOString() : null;
+    const DATE = parseDate(date) ? parseDate(date).toISOString() : null;
     if (!DATE) {
       return res.status(400).json({ error: "Invalid date format" });
     }

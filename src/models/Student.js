@@ -50,11 +50,11 @@ const studentSchema = new mongoose.Schema(
     batch: {
       type: String,
     },
-    fee: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Fee",
-      default: null,
-    },
+    // fee: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Fee",
+    //   default: null,
+    // },
     phone: { type: String },
     kit: [
       {

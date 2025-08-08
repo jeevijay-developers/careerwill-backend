@@ -298,4 +298,152 @@ exports.bulkUploadAttendence = async (req, res) => {
   }
 };
 
+exports.bulkUploadStudentsSecond = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Ensure a file is uploaded
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const workbook = xlsx.read(req.file.buffer, {
+      type: "buffer",
+      cellDates: true,
+    });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    // Roll numbers for validation
+    const rollNumbers = sheetData.map((row) => row[`ROLL NO.`]).filter(Boolean);
+
+    if (rollNumbers.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Roll number is required for each student." });
+    }
+
+    // Check if any of the roll numbers already exist
+    const existingStudents = await Student.find({
+      rollNo: { $in: rollNumbers },
+    }).session(session);
+    if (existingStudents.length > 0) {
+      return res.status(400).json({ error: "Roll number already exists." });
+    }
+
+    // Prepare students and fees data
+    const students = [];
+    const fees = [];
+    let insertedCount = 0;
+
+    for (const row of sheetData) {
+      // Validate mobile numbers and fee details
+      if (!row[`student mobile no`] || !row[`Parents Contact No.`]) {
+        await session.abortTransaction();
+        return res.status(400).json({
+          error: "Mobile numbers are required for both student and parent.",
+        });
+      }
+
+      if (!row[`FINAL FEE`] || !row[`Mode of Payment`]) {
+        console.log(row[`Mode of Payment`]);
+        console.log(row[`FINAL FEE`]);
+
+        await session.abortTransaction();
+        return res.status(400).json({
+          error: "Fee details are required.",
+        });
+      }
+
+      // Create student document
+      const newStudent = new Student({
+        rollNo: row[`ROLL NO.`],
+        name: row["Student Name"] || "N/A",
+        class: row[`Class`],
+        previousSchoolName: row[`Previous School Name`] || "",
+        medium: row[`Medium`] || "",
+        DOB: row[`DOB`] || "",
+        gender: row[`Gender`],
+        category: row[`Category`] || "",
+        state: row[`State`] || "",
+        city: row[`City`] || "",
+        pinCode: row[`Pincode`] || "",
+        permanentAddress: row[`Permanent Address`] || "",
+        mobileNumber: row[`student mobile no`],
+        tShirtSize: row[`T-SHIRT SIZE`] || "",
+        howDidYouHearAboutUs: row[`How did you know about career will`] || "",
+        programmeName: row[`Programme Name`] || "",
+        emergencyContact: row[`Emergency Local Contact No`],
+        email: row[`Email ID`] || "",
+        phone: row[`student mobile no`],
+        parent: {
+          occupation: row[`Parents Occupation`] || "",
+          fatherName: row[`Father's Name`] || "",
+          motherName: row[`Mother's Name`] || "",
+          parentContact: row[`Parents Contact No.`],
+          email: row[`Parents Email`] || "", // assuming there's an email column
+        },
+        batch: row[`BATCH NAME`],
+      });
+
+      // Create fee document
+      const fee = new Fee({
+        studentRollNo: row[`ROLL NO.`],
+        totalFees: row[`Total Fees`],
+        discount: row[`Discount`] || 0,
+        finalFees: row[`FINAL FEE`],
+        approvedBy: row[`Approved By`] || "",
+        paidAmount: row[`Received Amount`] || 0,
+        pendingAmount:
+          row[`Pending Fees`] ||
+          Number(row[`FINAL FEE`]) - Number(row[`Received Amount`]),
+        dueDate: parseDate(row[`Expected Date of Receipt of Pending Fees`])
+          ? parseDate(
+              row[`Expected Date of Receipt of Pending Fees`]
+            ).toISOString()
+          : null,
+        status:
+          Number(row[`FINAL FEE`]) === Number(row[`Received Amount`])
+            ? "PAID"
+            : "PARTIAL",
+        submissions: [
+          {
+            amount: row[`Received Amount`] || 0,
+            mode: row[`Mode of Payment`] || "N/A",
+            dateOfReceipt: parseDate(row[`Date of Receipt`])
+              ? parseDate(row[`Date of Receipt`]).toISOString()
+              : null,
+            receiptNumber: row[`Receipt No.`] || "",
+            UTR: row[`UTR NO.`] || "",
+            date: parseDate(row[`Date of Receipt`])
+              ? parseDate(row[`Date of Receipt`])
+              : null, // required in schema
+          },
+        ],
+      });
+
+      students.push(newStudent);
+      fees.push(fee);
+    }
+
+    // Insert students and fees in bulk
+    await Student.insertMany(students, { session });
+    await Fee.insertMany(fees, { session });
+
+    // Commit transaction if everything is successful
+    await session.commitTransaction();
+
+    res.status(201).json({
+      message: "Bulk upload successful",
+      insertedCount: students.length,
+    });
+  } catch (err) {
+    console.error("Error in bulk upload:", err);
+    await session.abortTransaction();
+    res.status(500).json({ error: "Bulk upload failed", details: err.message });
+  } finally {
+    session.endSession();
+  }
+};
+
 // })

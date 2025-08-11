@@ -114,7 +114,7 @@ exports.varifyLoginOTP = async (req, res) => {
       isUsed: false,
     });
     if (!otp) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid OTP" });
     }
 
     // ! fetch all the users

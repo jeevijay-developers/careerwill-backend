@@ -8,6 +8,7 @@ const batchRoute = require("./router/batchRoutes");
 const feeRoute = require("./router/feeRoutes");
 const bulkUploadRoutes = require("./router/bulkUploadRoutes");
 const testScoreRoutes = require("./router/testScoreRoutes");
+const userRolesRoutes = require("./router/userRoutes");
 const cors = require("cors");
 
 const ORIGINS = [
@@ -34,6 +35,7 @@ app.use("/api/fee", feeRoute);
 app.use("/api/bulk", bulkUploadRoutes);
 app.use("/api/auth", authRoute);
 app.use("/api/test-score", testScoreRoutes);
+app.use("/api/user-roles", userRolesRoutes);
 app.post("/", async (req, res) => {
   const { request_code } = req.headers;
 

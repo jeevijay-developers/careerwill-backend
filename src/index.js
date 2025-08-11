@@ -13,6 +13,8 @@ const cors = require("cors");
 const ORIGINS = [
   process.env.DEV_ENV,
   process.env.TEST_ENV,
+  process.env.PARENT_LOCAL,
+  process.env.PARENT_DEV,
   "https://careerwill-frontend.vercel.app",
   "https://careerwill-frontend-git-main-cw-ashishverma.vercel.app",
 ];

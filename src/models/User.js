@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["ADMIN", "TEACHER"],
+      enum: ["ADMIN", "TEACHER", "FRONTDDESK", "ACCOUNTS", "STORE"],
       required: true,
       default: "TEACHER",
     },
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    phone: { type: String, required: true, unique: true, trim: true },
+    phone: { type: String, trim: true },
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,

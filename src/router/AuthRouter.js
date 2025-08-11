@@ -1,6 +1,5 @@
-const { comparePassword } = require("../middleware/bcrypt");
-const { generateToken, verifyToken } = require("../middleware/jwt");
-const User = require("../models/User");
+// const { comparePassword } = require("../middleware/bcrypt");
+const { verifyToken } = require("../middleware/jwt");
 const express = require("express");
 const router = express.Router();
 const {

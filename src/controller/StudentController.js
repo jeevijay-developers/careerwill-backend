@@ -452,3 +452,32 @@ exports.getAttendanceByDate = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
+
+exports.updateStudentBatch = async (req, res) => {
+  try {
+    const { studentId, newBatchId } = req.body;
+
+    if (!studentId || !newBatchId) {
+      return res
+        .status(400)
+        .json({ message: "Student ID and Batch ID are required" });
+    }
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Update the student's batch
+    student.batch = newBatchId;
+    await student.save();
+
+    res.status(200).json({
+      message: "Student batch updated successfully",
+      student,
+    });
+  } catch (err) {
+    console.error("Error updating student batch:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

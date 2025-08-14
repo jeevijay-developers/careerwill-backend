@@ -60,7 +60,7 @@ const subjects = [
   "Disaster Management",
   "Security Issues",
 
-  // Engineering Exams (JEE, GATE, etc.)
+  // Engineering Exams (NEET, GATE, etc.)
   "Mathematics",
   "Physics",
   "Chemistry",

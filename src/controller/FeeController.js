@@ -192,7 +192,7 @@ exports.getFeesByRollNumber = async (req, res) => {
     }
 
     const fees = await Fee.find({ studentRollNo: rollNo });
-    res.status(200).json({ fees, studentName: student.name });
+    res.status(200).json({ ...fees, studentName: student.name });
   } catch (err) {
     console.error("Error fetching fees by roll number:", err);
     res.status(500).json({ message: "Internal server error" });

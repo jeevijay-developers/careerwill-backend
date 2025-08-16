@@ -190,8 +190,8 @@ exports.getFeesByRollNumber = async (req, res) => {
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-
-    const fees = await Fee.find({ studentRollNo: rollNo });
+    // Fetch fees by roll number
+    const fees = await Fee.findOne({ studentRollNo: rollNo });
     res.status(200).json({ ...fees, studentName: student.name });
   } catch (err) {
     console.error("Error fetching fees by roll number:", err);

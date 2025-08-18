@@ -39,9 +39,9 @@ exports.createFeeSubmission = async (req, res) => {
   }
 
   try {
-    const student = await Student.findOne({ rollNo: studentRollNo }).populate(
-      "fee"
-    );
+    const student = await Fee.findOne({
+      studentRollNo: studentRollNo,
+    });
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -49,7 +49,7 @@ exports.createFeeSubmission = async (req, res) => {
 
     let feeDoc;
 
-    if (!student.fee) {
+    if (!student) {
       // Create new fee document with studentName and studentRollNo
       if (!finalFees) {
         return res.status(400).json({ message: "Final Fees is required" });
@@ -83,11 +83,13 @@ exports.createFeeSubmission = async (req, res) => {
       await feeDoc.save();
 
       // Save reference in student document
-      student.fee = feeDoc._id;
+      // student.fee = feeDoc._id;
       await student.save();
     } else {
       // Update existing fee document
-      feeDoc = await Fee.findById(student.fee._id); // safe refetch in case populate fails
+      feeDoc = await Fee.findOne({
+        studentRollNo: studentRollNo,
+      }); // safe refetch in case populate fails
       // console.log(parseDate(dateOfReceipt));
 
       // feeDoc.amount += amount;

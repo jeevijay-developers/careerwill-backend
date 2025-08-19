@@ -61,10 +61,9 @@ const subjects = [
   "Security Issues",
 
   // Engineering Exams (NEET, GATE, etc.)
-  "Mathematics",
+  "Biology",
   "Physics",
   "Chemistry",
-  "Engineering Mathematics",
   "Electrical Engineering",
   "Mechanical Engineering",
   "Civil Engineering",
@@ -114,7 +113,7 @@ const subjects = [
   "Educational Psychology",
   "Teaching Methodology",
   "Environmental Studies",
-  "Mathematics Pedagogy",
+  "Biology Pedagogy",
   "Science Pedagogy",
   "Social Studies Pedagogy",
   "Language Pedagogy",

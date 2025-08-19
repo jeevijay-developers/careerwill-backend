@@ -1,10 +1,71 @@
-const Student = require("../models/Student");
+const { parseDate, parseDateRange } = require("../helper/RollNumber");
 const TestScore = require("../models/TestScore");
 
-// Create new test score
 exports.createTestScore = async (req, res) => {
   try {
-    const newScore = await TestScore.create(req.body);
+    const {
+      rollNumber,
+      student,
+      father,
+      batch,
+      subjects,
+      percentile,
+      total,
+      rank,
+      date,
+      name,
+    } = req.body;
+
+    // Basic validation
+    if (!rollNumber || typeof rollNumber !== "number") {
+      return res
+        .status(400)
+        .json({ message: "rollNumber is required and must be a number" });
+    }
+
+    if (!batch || typeof batch !== "string") {
+      return res
+        .status(400)
+        .json({ message: "batch is required and must be a string" });
+    }
+
+    if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "At least one subject is required" });
+    }
+
+    // Validate subjects array
+    for (let sub of subjects) {
+      if (!sub.name || typeof sub.name !== "string") {
+        return res
+          .status(400)
+          .json({ message: "Each subject must have a valid name" });
+      }
+      if (typeof sub.marks !== "number") {
+        return res
+          .status(400)
+          .json({ message: "Each subject must have marks as a number" });
+      }
+    }
+
+    // Auto-calc total if not provided
+    const calculatedTotal = subjects.reduce((sum, sub) => sum + sub.marks, 0);
+    const finalTotal = total ?? calculatedTotal;
+
+    const newScore = await TestScore.create({
+      rollNumber,
+      student,
+      father,
+      batch,
+      subjects,
+      percentile,
+      total: finalTotal,
+      rank,
+      date,
+      name,
+    });
+
     res.status(201).json(newScore);
   } catch (err) {
     res
@@ -127,5 +188,65 @@ exports.searchTestScore = async (req, res) => {
   } catch (err) {
     console.error("Error searching test scores:", err);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getNumberOfStudentsAttendedTheTest = async (req, res) => {
+  try {
+    const { testName, date } = req.query;
+    console.log("testName:", testName, "date:", date);
+
+    if (!testName || !date) {
+      return res.status(400).json({
+        message: "testName and date query parameters are required",
+      });
+    }
+
+    const range = parseDateRange(date);
+    if (!range) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    const count = await TestScore.countDocuments({
+      name: testName.toLowerCase().trim(),
+      date: { $gte: range.startOfDay, $lte: range.endOfDay },
+    });
+
+    res.status(200).json({ numberOfStudents: count });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error fetching number of students",
+      error: err.message,
+    });
+  }
+};
+
+exports.getAllTestScoresByRollNumber = async (req, res) => {
+  try {
+    const rollNumber = parseInt(req.params.rollNumber, 10);
+
+    if (isNaN(rollNumber)) {
+      return res
+        .status(400)
+        .json({ message: "Roll number must be a valid number" });
+    }
+
+    const scores = await TestScore.find({ rollNumber }).sort({
+      percentile: -1,
+      date: -1,
+    });
+
+    if (!scores || scores.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No scores found for this roll number" });
+    }
+
+    res.status(200).json(scores);
+  } catch (err) {
+    res.status(500).json({
+      message: "Error fetching scores by roll number",
+      error: err.message,
+    });
   }
 };

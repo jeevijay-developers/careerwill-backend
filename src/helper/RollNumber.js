@@ -47,3 +47,15 @@ exports.parseDate = (inputDate) => {
   const parsed = dayjs.utc(inputDate);
   return parsed.isValid() ? parsed.toDate() : null;
 };
+
+exports.parseDateRange = (inputDate) => {
+  const parsed = dayjs.utc(inputDate);
+  // console.log("PARSED DATE ", parsed);
+
+  if (!parsed.isValid()) return null;
+
+  return {
+    startOfDay: parsed.startOf("day").toDate(),
+    endOfDay: parsed.endOf("day").toDate(),
+  };
+};

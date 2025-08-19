@@ -25,4 +25,14 @@ router.delete("/delete-test-scores/:id", testScoreController.deleteTestScore);
 
 router.get("/search-test-scores", testScoreController.searchTestScore);
 
+router.get(
+  "/get-students-test-count",
+  testScoreController.getNumberOfStudentsAttendedTheTest
+);
+
+router.get(
+  "/get-all-attended-tests/:rollNumber",
+  testScoreController.getAllTestScoresByRollNumber
+);
+
 module.exports = router;

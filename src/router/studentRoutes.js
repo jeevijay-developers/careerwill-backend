@@ -14,6 +14,7 @@ const {
   getAttendenceByRollNumber,
   getAttendanceByDate,
   updateStudentBatch,
+  updateStudent
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -49,5 +50,6 @@ router.get(
 router.get("/get-attendence-by-date", getAttendanceByDate);
 
 router.put("/update-student-batch", updateStudentBatch);
+router.put("/update-student/:id", updateStudent);
 
 module.exports = router;

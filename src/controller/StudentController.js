@@ -481,3 +481,32 @@ exports.updateStudentBatch = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.updateStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    // Validate incoming data
+    if (!id || !updatedData) {
+      return res.status(400).json({ message: "Invalid data" });
+    }
+
+    const student = await Student.findById(id);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Update student fields
+    Object.assign(student, updatedData);
+    await student.save();
+
+    res.status(200).json({
+      message: "Student updated successfully",
+      student,
+    });
+  } catch (err) {
+    console.error("Error updating student:", err);
+    return res.status(500).json({ message: "Error in updating student" });
+  }
+}

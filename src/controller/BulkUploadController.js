@@ -6,6 +6,7 @@ const Fee = require("../models/Fee");
 const Student = require("../models/Student");
 const Attendance = require("../models/Attendance");
 const { parseDate } = require("../helper/RollNumber");
+const Kit = require("../models/Kit");
 exports.uploadTestScores = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
@@ -446,4 +447,98 @@ exports.bulkUploadStudentsSecond = async (req, res) => {
   }
 };
 
-// })
+exports.bulkUploadKits = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (data.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "The uploaded Excel file is empty." });
+    }
+
+    // cache existing kits
+    let EXISTED_KITS = await Kit.find();
+    let NOT_FOUND_ROLL_NUMBERS = [];
+
+    // --- Build KIT_TO_ASSIGN only once from first row ---
+    const NEW_KITS = data[0]["kits"]
+      ? data[0]["kits"].split(",").map((k) => k.trim())
+      : [];
+
+    let KIT_TO_ASSIGN = [];
+
+    // Ensure all kits exist (atomic find-or-create)
+    const createdOrFoundKits = await Promise.all(
+      NEW_KITS.map(async (kit) => {
+        const normalizedName = kit.trim().toLowerCase();
+
+        // Try to find existing kit
+        let existingKit = EXISTED_KITS.find((k) => k.name === normalizedName);
+
+        if (existingKit) {
+          return existingKit;
+        }
+
+        // Create new if not exists
+        let newKit = await Kit.findOneAndUpdate(
+          { name: normalizedName },
+          { $setOnInsert: { description: data[0]["description"] || "" } },
+          { new: true, upsert: true }
+        );
+
+        EXISTED_KITS.push(newKit);
+        return newKit;
+      })
+    );
+
+    KIT_TO_ASSIGN = createdOrFoundKits.map((k) => k._id);
+
+    // --- Assign kits to students ---
+    await Promise.all(
+      data.map(async (row) => {
+        const rollNo = Number(row["rollnum"]);
+        console.log(`Processing roll number: ${rollNo}`);
+
+        if (isNaN(rollNo)) {
+          NOT_FOUND_ROLL_NUMBERS.push(row["rollnum"]);
+          return;
+        }
+
+        const student = await Student.findOne({ rollNo });
+        if (!student) {
+          NOT_FOUND_ROLL_NUMBERS.push(row["rollnum"]);
+          return;
+        }
+
+        // Assign same kits to all students
+        await Student.updateOne(
+          { rollNo },
+          { $addToSet: { kit: { $each: KIT_TO_ASSIGN } } }
+        );
+      })
+    );
+    // for (const row of data) {
+
+    // }
+
+    return res.status(200).json({
+      message: "Bulk upload kits successful",
+      EXISTED_KITS: EXISTED_KITS.map((k) => ({ id: k._id, name: k.name })),
+      NOT_FOUND_ROLL_NUMBERS,
+    });
+  } catch (error) {
+    console.error("Error in bulk upload kits:", error);
+    res.status(500).json({
+      error: "Bulk upload kits failed",
+      details: error.message,
+    });
+  }
+};

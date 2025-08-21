@@ -1,4 +1,4 @@
-const { connectDB } = require("../config/mongoDB");
+const { connectDB, closeDBConnection } = require("../config/mongoDB");
 const User = require("../models/User");
 // require("dotenv").config();
 const admins = [
@@ -47,6 +47,12 @@ const addAdmins = async () => {
     }
   } catch (error) {
     console.error("Error adding admins:", error);
+  } finally {
+    // Ensure you close the database connection if needed
+    // await closeDBConnection(); // Uncomment if you have a function to close the connection
+    closeDBConnection();
+    console.log("Admin upload process completed.");
+    process.exit(0); // Exit the process after adding admins
   }
 };
 

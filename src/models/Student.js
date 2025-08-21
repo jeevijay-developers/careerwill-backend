@@ -55,6 +55,11 @@ const studentSchema = new mongoose.Schema(
     //   default: null,
     // },
     phone: { type: String },
+    status: {
+      type: String,
+      enum: ["ACTIVE", "REFUND", "ADMISSION_CANCELLED"],
+      default: "ACTIVE",
+    },
     kit: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -102,6 +102,7 @@ exports.createStudent = async (req, res) => {
       email: email || "",
       phone: mobileNumber,
       kit: kit || [],
+      batch,
       parent: {
         occupation: parent?.occupation || "",
         fatherName: parent?.fatherName || "",
@@ -559,5 +560,28 @@ exports.addAttendance = async (req, res) => {
       success: false,
       message: "Server error, unable to add attendance record",
     });
+  }
+};
+
+exports.deleteStudentByRollNumber = async (req, res) => {
+  try {
+    const { rollNumber } = req.params;
+    if (!rollNumber) {
+      return res.status(400).json({ message: "Roll number is required" });
+    }
+
+    const student = await Student.findOneAndDelete({ rollNo: rollNumber });
+    // delete fee
+    await Fee.deleteMany({ studentRollNo: rollNumber });
+    // delete attendance
+    await Attendance.deleteMany({ rollNo: rollNumber });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.status(200).json({ message: "Student deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting student:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

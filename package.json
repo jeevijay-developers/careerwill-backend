@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
-    "admins": "node src/helper/uploadAdmins.js"
+    "admins": "node src/helper/uploadAdmins.js",
+    "res-gen": "node src/helper/StartReceiptNumberAutoGeneration.js"
   },
   "author": "",
   "license": "ISC",

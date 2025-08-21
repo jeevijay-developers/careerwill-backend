@@ -35,7 +35,6 @@ exports.createStudent = async (req, res) => {
       email,
       batch,
       phone,
-      image,
       parent,
       kit,
     } = req.body;
@@ -77,10 +76,10 @@ exports.createStudent = async (req, res) => {
       }
     }
 
-    if (!image || !image.url || image.url.trim() === "") {
-      await session.abortTransaction();
-      return res.status(400).json({ message: "Image URL is required" });
-    }
+    // if (!image || !image.url || image.url.trim() === "") {
+    //   await session.abortTransaction();
+    //   return res.status(400).json({ message: "Image URL is required" });
+    // }
 
     const newStudent = new Student({
       rollNo,
@@ -103,7 +102,6 @@ exports.createStudent = async (req, res) => {
       email: email || "",
       phone: mobileNumber,
       kit: kit || [],
-      image,
       parent: {
         occupation: parent?.occupation || "",
         fatherName: parent?.fatherName || "",
@@ -509,4 +507,57 @@ exports.updateStudent = async (req, res) => {
     console.error("Error updating student:", err);
     return res.status(500).json({ message: "Error in updating student" });
   }
-}
+};
+
+// Add a new attendance record
+exports.addAttendance = async (req, res) => {
+  try {
+    const {
+      rollNo,
+      name,
+      inTime,
+      outTime,
+      lateArrival,
+      earlyDeparture,
+      workingHours,
+      otDuration,
+      presentStatus,
+      date,
+    } = req.body;
+
+    // Basic validation
+    if (!rollNo || !name || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "rollNo, name, and date are required fields.",
+      });
+    }
+
+    const newAttendance = new Attendance({
+      rollNo,
+      name,
+      inTime,
+      outTime,
+      lateArrival,
+      earlyDeparture,
+      workingHours,
+      otDuration,
+      presentStatus,
+      date,
+    });
+
+    const savedRecord = await newAttendance.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Attendance record added successfully",
+      data: savedRecord,
+    });
+  } catch (error) {
+    console.error("Error adding attendance record:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error, unable to add attendance record",
+    });
+  }
+};

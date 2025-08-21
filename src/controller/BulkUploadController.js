@@ -7,6 +7,7 @@ const Student = require("../models/Student");
 const Attendance = require("../models/Attendance");
 const { parseDate } = require("../helper/RollNumber");
 const Kit = require("../models/Kit");
+const ReceiptCounter = require("../models/ReceiptCounter");
 exports.uploadTestScores = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
@@ -336,6 +337,10 @@ exports.bulkUploadStudentsSecond = async (req, res) => {
     const students = [];
     const fees = [];
     let insertedCount = 0;
+    const RECEPT_COUNTER = await ReceiptCounter.findOne({ id: 1 }).session(
+      session
+    );
+    let COUNTER_NUMBER = RECEPT_COUNTER ? RECEPT_COUNTER.counter : 1000;
 
     for (const row of sheetData) {
       // Validate mobile numbers and fee details
@@ -414,7 +419,7 @@ exports.bulkUploadStudentsSecond = async (req, res) => {
             dateOfReceipt: parseDate(row[`Date of Receipt`])
               ? parseDate(row[`Date of Receipt`]).toISOString()
               : null,
-            receiptNumber: row[`Receipt No.`] || "",
+            receiptNumber: row[`Receipt No.`] || ++COUNTER_NUMBER,
             UTR: row[`UTR NO.`] || "",
             date: parseDate(row[`Date of Receipt`])
               ? parseDate(row[`Date of Receipt`])
@@ -430,6 +435,11 @@ exports.bulkUploadStudentsSecond = async (req, res) => {
     // Insert students and fees in bulk
     await Student.insertMany(students, { session });
     await Fee.insertMany(fees, { session });
+    await ReceiptCounter.findOneAndUpdate(
+      { id: 1 },
+      { counter: COUNTER_NUMBER },
+      { session }
+    );
 
     // Commit transaction if everything is successful
     await session.commitTransaction();

@@ -1,5 +1,5 @@
 const express = require("express");
-const connectDB = require("./config/mongoDB");
+const { connectDB } = require("./config/mongoDB");
 const dotenv = require("dotenv").config();
 const authRoute = require("./router/AuthRouter");
 const kitRoute = require("./router/kitRoutes");

@@ -1,4 +1,4 @@
-const connectDB = require("../config/mongoDB");
+const { connectDB } = require("../config/mongoDB");
 const User = require("../models/User");
 // require("dotenv").config();
 const admins = [

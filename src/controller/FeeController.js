@@ -1,5 +1,6 @@
 const { parseDate } = require("../helper/RollNumber");
 const Fee = require("../models/Fee");
+const ReceiptCounter = require("../models/ReceiptCounter");
 const Student = require("../models/Student");
 
 exports.createFeeSubmission = async (req, res) => {
@@ -14,7 +15,6 @@ exports.createFeeSubmission = async (req, res) => {
     dueDate,
     mode,
     dateOfReceipt,
-    receiptNumber,
     UTR,
   } = req.body;
 
@@ -34,10 +34,14 @@ exports.createFeeSubmission = async (req, res) => {
     return res.status(400).json({ message: "Date of Receipt is required" });
   }
 
-  if (!receiptNumber) {
-    return res.status(400).json({ message: "Receipt Number is required" });
-  }
+  // if (!receiptNumber) {
+  //   return res.status(400).json({ message: "Receipt Number is required" });
+  // }
 
+  const RECEPT_COUNTER = await ReceiptCounter.findOne({ id: 1 }).session(
+    session
+  );
+  let COUNTER_NUMBER = RECEPT_COUNTER ? RECEPT_COUNTER.counter : 1000;
   try {
     const student = await Fee.findOne({
       studentRollNo: studentRollNo,
@@ -74,7 +78,7 @@ exports.createFeeSubmission = async (req, res) => {
             dateOfReceipt: parseDate(dateOfReceipt),
             amount: Number(paidAmount),
             mode,
-            receiptNumber,
+            receiptNumber: ++COUNTER_NUMBER,
             UTR,
           },
         ],
@@ -103,11 +107,16 @@ exports.createFeeSubmission = async (req, res) => {
         dateOfReceipt: parseDate(dateOfReceipt),
         amount: paidAmount,
         mode,
-        receiptNumber,
+        receiptNumber: ++COUNTER_NUMBER,
         UTR,
       });
 
       await feeDoc.save();
+      await ReceiptCounter.findOneAndUpdate(
+        { id: 1 }, // Update the receipt counter
+        { counter: COUNTER_NUMBER },
+        { new: true, upsert: true }
+      );
     }
 
     res.status(200).json({

@@ -38,8 +38,9 @@ exports.createFeeSubmission = async (req, res) => {
   //   return res.status(400).json({ message: "Receipt Number is required" });
   // }
 
+
   const RECEPT_COUNTER = await ReceiptCounter.findOne({ id: 1 });
-  let COUNTER_NUMBER = RECEPT_COUNTER ? RECEPT_COUNTER.counter : 1000;
+  let COUNTER_NUMBER = RECEPT_COUNTER ? RECEPT_COUNTER.counter : 100000;
   try {
     const student = await Student.findOne({
       rollNo: studentRollNo,
@@ -49,9 +50,11 @@ exports.createFeeSubmission = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    let feeDoc;
+    let feeDoc = await Fee.findOne({
+        studentRollNo: studentRollNo,
+      }) ;
 
-    if (!student) {
+    if (!feeDoc) {
       // Create new fee document with studentName and studentRollNo
       if (!finalFees) {
         return res.status(400).json({ message: "Final Fees is required" });
@@ -87,14 +90,25 @@ exports.createFeeSubmission = async (req, res) => {
       // Save reference in student document
       // student.fee = feeDoc._id;
       await student.save();
+      await ReceiptCounter.findOneAndUpdate(
+        { id: 1 }, // Update the receipt counter
+        { counter: COUNTER_NUMBER },
+        { new: true, upsert: true }
+      );
     } else {
       // Update existing fee document
-      feeDoc = await Fee.findOne({
-        studentRollNo: studentRollNo,
-      }); // safe refetch in case populate fails
+      // feeDoc = await Fee.findOne({
+      //   studentRollNo: studentRollNo,
+      // });
+       // safe refetch in case populate fails
       // console.log(parseDate(dateOfReceipt));
 
       // feeDoc.amount += amount;
+      if(Number(feeDoc.finalFees) <= Number(feeDoc.paidAmount)) {
+        return res.status(400).json({
+          message:"Complete Fees Is Already Submitted"
+        })
+      }
       feeDoc.paidAmount = Number(feeDoc.paidAmount) + Number(paidAmount);
       feeDoc.pendingAmount = Number(feeDoc.pendingAmount) - Number(paidAmount);
       feeDoc.status =

@@ -38,9 +38,7 @@ exports.createFeeSubmission = async (req, res) => {
   //   return res.status(400).json({ message: "Receipt Number is required" });
   // }
 
-  const RECEPT_COUNTER = await ReceiptCounter.findOne({ id: 1 }).session(
-    session
-  );
+  const RECEPT_COUNTER = await ReceiptCounter.findOne({ id: 1 });
   let COUNTER_NUMBER = RECEPT_COUNTER ? RECEPT_COUNTER.counter : 1000;
   try {
     const student = await Fee.findOne({

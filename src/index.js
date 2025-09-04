@@ -10,6 +10,7 @@ const bulkUploadRoutes = require("./router/bulkUploadRoutes");
 const testScoreRoutes = require("./router/testScoreRoutes");
 const userRolesRoutes = require("./router/userRoutes");
 const cors = require("cors");
+const reportRoutes = require("./router/reportRoutes");
 
 const ORIGINS = [
   process.env.DEV_ENV,
@@ -36,6 +37,7 @@ app.use("/api/bulk", bulkUploadRoutes);
 app.use("/api/auth", authRoute);
 app.use("/api/test-score", testScoreRoutes);
 app.use("/api/user-roles", userRolesRoutes);
+app.use("/api/report", reportRoutes);
 app.post("/", async (req, res) => {
   const { request_code } = req.headers;
 

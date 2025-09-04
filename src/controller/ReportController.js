@@ -43,7 +43,7 @@ exports.getSummaryReport = async (req, res) => {
     ]);
     const totalCollected = totalCollectedAgg[0]?.total || 0;
 
-  // (Removed) Roll no wise fee deposit and due status per request.
+    // (Removed) Roll no wise fee deposit and due status per request.
 
     // 6 & 7. Attendance: present/absent students date-wise (and weekly)
     const attendanceAgg = await Attendance.aggregate([
@@ -115,18 +115,47 @@ exports.getSummaryReport = async (req, res) => {
     if (req.query.download === "csv" || req.query.download === "excel") {
       const summaryRows = [];
       batchWise.forEach((b) => {
-        summaryRows.push({ section: "batch", batch: b._id || "N/A", students: b.count });
+        summaryRows.push({
+          section: "batch",
+          batch: b._id || "N/A",
+          students: b.count,
+        });
       });
-      summaryRows.push({ section: "financial", metric: "totalRevenue", value: totalRevenue });
-      summaryRows.push({ section: "financial", metric: "totalCollected", value: totalCollected });
+      summaryRows.push({
+        section: "financial",
+        metric: "totalRevenue",
+        value: totalRevenue,
+      });
+      summaryRows.push({
+        section: "financial",
+        metric: "totalCollected",
+        value: totalCollected,
+      });
       // Simple attendance totals (sum across all dates)
-      const totalPresent = Object.values(attendanceByDate).reduce((a, v) => a + v.present, 0);
-      const totalAbsent = Object.values(attendanceByDate).reduce((a, v) => a + v.absent, 0);
-      summaryRows.push({ section: "attendance", metric: "present", value: totalPresent });
-      summaryRows.push({ section: "attendance", metric: "absent", value: totalAbsent });
+      const totalPresent = Object.values(attendanceByDate).reduce(
+        (a, v) => a + v.present,
+        0
+      );
+      const totalAbsent = Object.values(attendanceByDate).reduce(
+        (a, v) => a + v.absent,
+        0
+      );
+      summaryRows.push({
+        section: "attendance",
+        metric: "present",
+        value: totalPresent,
+      });
+      summaryRows.push({
+        section: "attendance",
+        metric: "absent",
+        value: totalAbsent,
+      });
 
       if (req.query.download === "csv") {
-        const csv = toCSV(summaryRows, Object.keys(summaryRows[0] || { section: "info" }));
+        const csv = toCSV(
+          summaryRows,
+          Object.keys(summaryRows[0] || { section: "info" })
+        );
         res.header("Content-Type", "text/csv");
         res.attachment("reportSummary.csv");
         return res.send(csv);

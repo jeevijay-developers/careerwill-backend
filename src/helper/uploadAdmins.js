@@ -12,7 +12,7 @@ const admins = [
   {
     username: "Front Desk Admin", // String, required, unique
     password: "FrontDesk@123", // String, required (store hashed in real apps)
-    role: "FRONTDDESK", // One of: ADMIN, TEACHER, FRONTDDESK, ACCOUNTS, STORE
+    role: "FRONTDESK", // One of: ADMIN, TEACHER, FRONTDDESK, ACCOUNTS, STORE
     email: "careerwillfrontdesk@gmail.com", // String, required, unique, lowercase
     phone: "1111111111", // String, optional
   },

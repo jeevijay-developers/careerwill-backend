@@ -512,32 +512,32 @@ exports.bulkUploadKits = async (req, res) => {
     KIT_TO_ASSIGN = createdOrFoundKits.map((k) => k._id);
 
     // --- Assign kits to students ---
-    await Promise.all(
-      data.map(async (row) => {
-        const rollNo = Number(row["rollnum"]);
-        console.log(`Processing roll number: ${rollNo}`);
+    // let STUDENT_ARRAY = [];
+    // Extract all roll numbers from Excel
+    const BULK_ROLL_NUMBERS = data
+      .map((row) => Number(row["rollnum"]))
+      .filter((rn) => !isNaN(rn));
 
-        if (isNaN(rollNo)) {
-          NOT_FOUND_ROLL_NUMBERS.push(row["rollnum"]);
-          return;
-        }
+    // find all matching roll numbers in one query
+    const EXISTED_STUDENTS = await Student.find({
+      rollNo: { $in: BULK_ROLL_NUMBERS },
+    });
 
-        const student = await Student.findOne({ rollNo });
-        if (!student) {
-          NOT_FOUND_ROLL_NUMBERS.push(row["rollnum"]);
-          return;
-        }
-
-        // Assign same kits to all students
-        await Student.updateOne(
-          { rollNo },
-          { $addToSet: { kit: { $each: KIT_TO_ASSIGN } } }
-        );
-      })
+    // track missing roll numbers
+    const FOUND_ROLL_NUMBERS = EXISTED_STUDENTS.map((s) => s.rollNo);
+    const MISSING_ROLL_NUMBERS = BULK_ROLL_NUMBERS.filter(
+      (rn) => !FOUND_ROLL_NUMBERS.includes(rn)
     );
-    // for (const row of data) {
+    NOT_FOUND_ROLL_NUMBERS.push(...MISSING_ROLL_NUMBERS);
+    await Student.updateMany(
+      { _id: { $in: EXISTED_STUDENTS.map((s) => s._id) } },
+      { $addToSet: { kit: { $each: KIT_TO_ASSIGN } } }
+    );
 
-    // }
+    console.log(
+      `Kits assigned to ${EXISTED_STUDENTS.length} students. Not found roll numbers:`,
+      NOT_FOUND_ROLL_NUMBERS
+    );
 
     return res.status(200).json({
       message: "Bulk upload kits successful",

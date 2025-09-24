@@ -16,5 +16,6 @@ module.exports = {
   studentUpload: upload.single("studentFile"), // Expecting a single file with the field name 'file'
   attendenceUpload: upload.single("attendenceFile"),
   kitUpload: upload.single("kitFile"),
+  feeUpload: upload.single("feeFile"),
   uploadMultiple: upload.array("images", 10), // Expecting multiple files with the
 };

@@ -8,7 +8,8 @@
     "dev": "nodemon src/index.js",
     "admins": "node src/helper/uploadAdmins.js",
     "res-gen": "node src/helper/StartReceiptNumberAutoGeneration.js",
-    "status": "node src/helper/UpdateStatusToActive.js"
+    "status": "node src/helper/UpdateStatusToActive.js",
+    "del-ins": "node src/helper/deleteSubmissions.js"
   },
   "author": "",
   "license": "ISC",

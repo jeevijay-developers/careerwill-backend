@@ -552,3 +552,89 @@ exports.bulkUploadKits = async (req, res) => {
     });
   }
 };
+
+exports.bulkUploadInstallements = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (data.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "The uploaded Excel file is empty." });
+    }
+
+    const ROLL_NUMBERS = data
+      .map((row) => Number(row["rollNumber"]))
+      .filter((rn) => !isNaN(rn));
+
+    const FEES = await Fee.find({ studentRollNo: { $in: ROLL_NUMBERS } });
+
+    // not found roll numbers
+    const FOUND_ROLL_NUMBERS = FEES.map((f) => f.studentRollNo);
+    const NOT_FOUND_ROLL_NUMBERS = ROLL_NUMBERS.filter(
+      (rn) => !FOUND_ROLL_NUMBERS.includes(rn)
+    );
+
+    let updatedDocs = new Set();
+
+    for (const row of data) {
+      const rollNumber = Number(row["rollNumber"]);
+      const feeDoc = FEES.find((f) => Number(f.studentRollNo) === rollNumber);
+      if (!feeDoc) continue;
+
+      const parsedDate = parseDate(row["dateOfReceipt"]);
+
+      const newSubmission = {
+        amount: Number(row["amount"]) || 0,
+        mode: row["mode"] || "N/A",
+        dateOfReceipt:
+          parsedDate && !isNaN(new Date(parsedDate))
+            ? new Date(parsedDate)
+            : null,
+        receiptNumber: row["receiptNumber"] || "",
+        UTR: row["UTR"] || "",
+      };
+
+      // Push submission into Fee model
+      feeDoc.submissions.push(newSubmission);
+
+      // Update fee amounts
+      if (feeDoc.status !== "PAID") {
+        feeDoc.paidAmount += newSubmission.amount;
+        feeDoc.pendingAmount = Math.max(
+          feeDoc.finalFees - feeDoc.paidAmount,
+          0
+        );
+        feeDoc.status =
+          feeDoc.pendingAmount === 0
+            ? "PAID"
+            : feeDoc.paidAmount === 0
+            ? "UNPAID"
+            : "PARTIAL";
+      }
+
+      updatedDocs.add(feeDoc._id.toString());
+    }
+
+    await Fee.bulkSave(FEES);
+
+    return res.status(200).json({
+      message: "Bulk upload submissions successful",
+      updatedCount: updatedDocs.size,
+      NOT_FOUND_ROLL_NUMBERS,
+    });
+  } catch (error) {
+    console.error("Error in bulk upload installments:", error);
+    res.status(500).json({
+      error: "Bulk upload installments failed",
+      details: error.message,
+    });
+  }
+};

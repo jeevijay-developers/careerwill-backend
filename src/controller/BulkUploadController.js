@@ -50,7 +50,7 @@ exports.uploadTestScores = async (req, res) => {
 
     for (const row of data) {
       const scoreObject = {
-        rollNumber: row["Roll No."],
+        rollNumber: row["Roll No"],
         student: row["Student Name"] || "N/A",
         father: row["Students Father Name"] || "N/A",
         batch: row["Batch"] || "N/A",

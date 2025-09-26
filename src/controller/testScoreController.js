@@ -62,7 +62,7 @@ exports.createTestScore = async (req, res) => {
       percentile,
       total: finalTotal,
       rank,
-      date,
+      date: parseDate(date) || new Date(),
       name,
     });
 

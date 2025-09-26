@@ -48,12 +48,11 @@ const studentSchema = new mongoose.Schema(
     },
     batch: {
       type: String,
+      uppercase: true,
+      trim: true,
+      default: "N/A",
     },
-    // fee: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Fee",
-    //   default: null,
-    // },
+
     phone: { type: String },
     status: {
       type: String,

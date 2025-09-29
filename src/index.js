@@ -11,6 +11,7 @@ const testScoreRoutes = require("./router/testScoreRoutes");
 const userRolesRoutes = require("./router/userRoutes");
 const cors = require("cors");
 const reportRoutes = require("./router/reportRoutes");
+const dataRoutes = require("./router/dataRoutes");
 
 const ORIGINS = [
   process.env.DEV_ENV,
@@ -38,6 +39,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/test-score", testScoreRoutes);
 app.use("/api/user-roles", userRolesRoutes);
 app.use("/api/report", reportRoutes);
+app.use("/api/data", dataRoutes);
 app.post("/", async (req, res) => {
   const { request_code } = req.headers;
 

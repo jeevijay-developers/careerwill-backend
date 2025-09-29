@@ -605,3 +605,75 @@ exports.deleteStudentByRollNumber = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// @desc    Get filtered and paginated students
+exports.getFilteredStudents = async (req, res) => {
+  try {
+    const { batch, rollStart, rollEnd, page = 1, limit = 100 } = req.query;
+
+    // Convert page and limit to integers
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Build query object
+    let query = {};
+
+    // Handle batch filtering
+    if (batch && batch !== "ALL") {
+      query.batch = batch;
+    }
+
+    // Handle roll number range filtering
+    const rollStartNum = rollStart ? parseInt(rollStart) : null;
+    const rollEndNum = rollEnd ? parseInt(rollEnd) : null;
+
+    if (rollStartNum && rollEndNum) {
+      query.rollNo = { $gte: rollStartNum, $lte: rollEndNum };
+    } else if (rollStartNum) {
+      query.rollNo = { $gte: rollStartNum };
+    } else if (rollEndNum) {
+      query.rollNo = { $lte: rollEndNum };
+    }
+
+    // Get total count for pagination info
+    const totalRecords = await Student.countDocuments(query);
+
+    // Get paginated students
+    const students = await Student.find(query)
+      .sort({ rollNo: 1 }) // Sort by roll number ascending
+      .skip(skip)
+      .limit(limitNumber)
+      .lean(); // Use lean for better performance
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalRecords / limitNumber);
+    const hasNext = pageNumber < totalPages;
+    const hasPrev = pageNumber > 1;
+
+    res.status(200).json({
+      success: true,
+      data: students,
+      pagination: {
+        total: totalRecords,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: totalPages,
+        hasNext: hasNext,
+        hasPrev: hasPrev,
+      },
+      filters: {
+        batch: batch || "ALL",
+        rollStart: rollStartNum,
+        rollEnd: rollEndNum,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching filtered students:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};

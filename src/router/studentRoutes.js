@@ -17,6 +17,7 @@ const {
   updateStudent,
   addAttendance,
   deleteStudentByRollNumber,
+  getFilteredStudents,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -55,5 +56,8 @@ router.post("/add-attendance", addAttendance);
 router.put("/update-student-batch", updateStudentBatch);
 router.put("/update-student/:id", updateStudent);
 router.delete("/delete-student/:rollNumber", deleteStudentByRollNumber);
+
+// Paginated and filtered student fetch
+router.get("/filter", getFilteredStudents);
 
 module.exports = router;

@@ -8,6 +8,7 @@ const Attendance = require("../models/Attendance");
 const { parseDate } = require("../helper/RollNumber");
 const Kit = require("../models/Kit");
 const ReceiptCounter = require("../models/ReceiptCounter");
+const { syncBatchesFunct } = require("./BatchController");
 exports.uploadTestScores = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded." });
@@ -226,6 +227,7 @@ exports.bulkUploadStudents = async (req, res) => {
     }
 
     await session.commitTransaction();
+    await syncBatchesFunct();
     res.status(201).json({
       message: "Bulk upload successful",
       insertedCount: insertedStudents.length,

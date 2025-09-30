@@ -5,7 +5,7 @@ const admins = [
   {
     username: "Super Admin", // String, required, unique
     password: "Super@123", // String, required (store hashed in real apps)
-    role: "ADMIN", // One of: ADMIN, TEACHER, FRONTDDESK, ACCOUNTS, STORE
+    role: "SUPER_ADMIN", // One of: ADMIN, TEACHER, FRONTDDESK, ACCOUNTS, STORE
     email: "careerwillneet@gmail.com", // String, required, unique, lowercase
     phone: "9999999999", // String, optional
   },

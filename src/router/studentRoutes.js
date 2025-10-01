@@ -18,6 +18,9 @@ const {
   addAttendance,
   deleteStudentByRollNumber,
   getFilteredStudents,
+  searchStudentsByName,
+  searchStudentsByFatherName,
+  searchStudentsByParentContact,
 } = require("../controller/StudentController");
 const { upload } = require("../middleware/multer");
 
@@ -59,5 +62,10 @@ router.delete("/delete-student/:rollNumber", deleteStudentByRollNumber);
 
 // Paginated and filtered student fetch
 router.get("/filter", getFilteredStudents);
+
+// Search APIs with pagination
+router.post("/search-by-name", searchStudentsByName);
+router.post("/search-by-father-name", searchStudentsByFatherName);
+router.post("/search-by-parent-contact", searchStudentsByParentContact);
 
 module.exports = router;

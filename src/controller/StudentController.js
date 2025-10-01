@@ -677,3 +677,204 @@ exports.getFilteredStudents = async (req, res) => {
     });
   }
 };
+
+// @desc    Search students by name with pagination
+exports.searchStudentsByName = async (req, res) => {
+  try {
+    const { name, page = 1, limit = 10 } = req.body;
+
+    // Validate required parameter
+    if (!name || name.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Name parameter is required and cannot be empty",
+      });
+    }
+
+    // Convert page and limit to integers
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Validate pagination parameters
+    if (pageNumber < 1 || limitNumber < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page and limit must be positive integers",
+      });
+    }
+
+    // Build query with case-insensitive regex search
+    const query = {
+      name: { $regex: name.trim(), $options: "i" },
+    };
+
+    // Get total count
+    const totalRecords = await Student.countDocuments(query);
+
+    // Get paginated results
+    const students = await Student.find(query)
+      .sort({ rollNo: 1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean();
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalRecords / limitNumber);
+
+    res.status(200).json({
+      success: true,
+      data: students,
+      pagination: {
+        total: totalRecords,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: totalPages,
+        hasNext: pageNumber < totalPages,
+        hasPrev: pageNumber > 1,
+      },
+      searchTerm: name.trim(),
+    });
+  } catch (err) {
+    console.error("Error searching students by name:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// @desc    Search students by father's name with pagination
+exports.searchStudentsByFatherName = async (req, res) => {
+  try {
+    const { fatherName, page = 1, limit = 10 } = req.body;
+
+    // Validate required parameter
+    if (!fatherName || fatherName.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "fatherName parameter is required and cannot be empty",
+      });
+    }
+
+    // Convert page and limit to integers
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Validate pagination parameters
+    if (pageNumber < 1 || limitNumber < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page and limit must be positive integers",
+      });
+    }
+
+    // Build query with case-insensitive regex search
+    const query = {
+      "parent.fatherName": { $regex: fatherName.trim(), $options: "i" },
+    };
+
+    // Get total count
+    const totalRecords = await Student.countDocuments(query);
+
+    // Get paginated results
+    const students = await Student.find(query)
+      .sort({ rollNo: 1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean();
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalRecords / limitNumber);
+
+    res.status(200).json({
+      success: true,
+      data: students,
+      pagination: {
+        total: totalRecords,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: totalPages,
+        hasNext: pageNumber < totalPages,
+        hasPrev: pageNumber > 1,
+      },
+      searchTerm: fatherName.trim(),
+    });
+  } catch (err) {
+    console.error("Error searching students by father name:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// @desc    Search students by parent contact with pagination
+exports.searchStudentsByParentContact = async (req, res) => {
+  try {
+    const { parentContact, page = 1, limit = 10 } = req.body;
+
+    // Validate required parameter
+    if (!parentContact || parentContact.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "parentContact parameter is required and cannot be empty",
+      });
+    }
+
+    // Convert page and limit to integers
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Validate pagination parameters
+    if (pageNumber < 1 || limitNumber < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page and limit must be positive integers",
+      });
+    }
+
+    // Build query with exact match or partial match for contact
+    const query = {
+      "parent.parentContact": { $regex: parentContact.trim(), $options: "i" },
+    };
+
+    // Get total count
+    const totalRecords = await Student.countDocuments(query);
+
+    // Get paginated results
+    const students = await Student.find(query)
+      .sort({ rollNo: 1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .lean();
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalRecords / limitNumber);
+
+    res.status(200).json({
+      success: true,
+      data: students,
+      pagination: {
+        total: totalRecords,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: totalPages,
+        hasNext: pageNumber < totalPages,
+        hasPrev: pageNumber > 1,
+      },
+      searchTerm: parentContact.trim(),
+    });
+  } catch (err) {
+    console.error("Error searching students by parent contact:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};

@@ -53,14 +53,14 @@ exports.getSummaryReport = async (req, res) => {
           count: { $sum: 1 },
         },
       },
-    ]);
+    ]).limit(10);
     // Format attendance by date
     const attendanceByDate = {};
     attendanceAgg.forEach((rec) => {
       const date = rec._id.date.toISOString().slice(0, 10);
       if (!attendanceByDate[date])
         attendanceByDate[date] = { present: 0, absent: 0 };
-      if (rec._id.presentStatus === "PRESENT")
+      if (rec._id.presentStatus === "P")
         attendanceByDate[date].present += rec.count;
       else attendanceByDate[date].absent += rec.count;
     });
